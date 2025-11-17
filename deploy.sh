@@ -33,7 +33,7 @@ echo "Step 4: Waiting for app to be healthy..."
 sleep 10
 
 # Check health
-if curl -f http://localhost/health > /dev/null 2>&1; then
+if curl -f http://localhost:8000/health > /dev/null 2>&1; then
     echo "✅ Application is running!"
 else
     echo "⚠️  Health check failed, checking logs..."
