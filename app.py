@@ -210,4 +210,9 @@ def create_app(config_name='development'):
     with app.app_context():
         db.create_all()
     
+    # Teardown function to release database connections
+    @app.teardown_appcontext
+    def shutdown_session(exception=None):
+        db.session.remove()
+    
     return app
