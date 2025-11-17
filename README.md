@@ -1,6 +1,8 @@
-# 🎬 Movie Recommender
+[![Live Site](https://img.shields.io/badge/Live%20Site-movies.ibrhr.dev-brightgreen)](https://movies.ibrhr.dev)
 
-A web application that learns what movies you like and recommends new ones tailored to your taste. Watch movies, rate them, and get personalized suggestions powered by machine learning.
+# 🎬 Filmish (Movie Recommender)
+
+A web application available at **https://movies.ibrhr.dev** that learns what movies you like and recommends new ones tailored to your taste. Watch movies, rate them, and get personalized suggestions powered by machine learning.
 
 **What it does:**
 - Recommends movies based on your watch history and ratings
@@ -51,6 +53,11 @@ A web application that learns what movies you like and recommends new ones tailo
 - API keys (free):
   - [TMDB API](https://www.themoviedb.org/settings/api) - Movie database
   - [OpenRouter API](https://openrouter.ai/) - AI embeddings
+
+## 🌐 Live Site
+
+You can try the deployed web app at: https://movies.ibrhr.dev
+
 
 
 ## 📖 How It Works
