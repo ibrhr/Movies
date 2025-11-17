@@ -15,7 +15,7 @@
 </div>
 {% endif %}
 
-<div class="container mx-auto px-4 pb-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <!-- Poster Column -->
         <div class="lg:col-span-3">
@@ -188,7 +188,7 @@
 </div>
 
 <!-- Reviews Section -->
-<div class="container mx-auto px-4 mt-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
     <h2 class="text-3xl font-bold text-white mb-6 flex items-center gap-3">
         <i data-lucide="message-square" class="w-8 h-8"></i>
         Reviews
@@ -423,7 +423,7 @@
 
 <!-- More Like This Section -->
 {% if similar_movies %}
-<div class="container mx-auto px-4 mt-12">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
     <h2 class="text-3xl font-bold text-white mb-6 flex items-center gap-3">
         <i data-lucide="film" class="w-8 h-8"></i>
         More Like This
@@ -467,7 +467,7 @@
 {% endif %}
 
 <!-- Back Button -->
-<div class="container mx-auto px-4 mt-8 mb-8">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 mb-8">
     <a href="{{ url_for('movies.browse') }}" 
        class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors border border-slate-700">
         <i data-lucide="arrow-left" class="w-4 h-4"></i>

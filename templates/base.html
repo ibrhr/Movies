@@ -39,8 +39,8 @@
 </head>
 <body class="min-h-screen flex flex-col bg-slate-900 text-slate-50 font-sans antialiased">
     <!-- Navigation -->
-    <nav class="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-lg" x-data="{ mobileMenuOpen: false }">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <nav class="sticky top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-lg" x-data="{ mobileMenuOpen: false }">
+        <div class="w-full px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16">
                 <!-- Logo -->
                 <div class="flex items-center">
@@ -81,7 +81,7 @@
                                    value="{{ request.args.get('q', '') }}"
                                    placeholder="Search movies..." 
                                    required
-                                   class="w-64 px-4 py-2 bg-slate-800 border border-slate-700 rounded-l-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                   class="w-48 xl:w-64 px-4 py-2 bg-slate-800 border border-slate-700 rounded-l-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
                             <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-r-lg transition-colors duration-200">
                                 <i data-lucide="search" class="w-5 h-5"></i>
                             </button>
@@ -199,7 +199,7 @@
     </nav>
 
     <!-- Flash Messages -->
-    <div class="mt-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
                 <div class="space-y-3 mb-6">
@@ -239,12 +239,12 @@
     </div>
 
     <!-- Main Content -->
-    <main class="flex-1 mt-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8">
         {% block content %}{% endblock %}
     </main>
 
     <!-- Footer -->
-    <footer class="mt-auto bg-slate-950 border-t border-slate-800 py-8">
+    <footer class="mt-auto bg-slate-950 border-t border-slate-800 py-8 w-full">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center">
                 <p class="text-lg font-semibold text-slate-200 mb-2">MovieRec - Personalized Movie Recommendations</p>
