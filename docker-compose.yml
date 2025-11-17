@@ -8,7 +8,7 @@ services:
     container_name: movies-app
     restart: unless-stopped
     ports:
-      - "80:8000"
+      - "8000:8000"
     environment:
       # Database - Use Supabase connection string
       - DATABASE_URL=${DATABASE_URL}
