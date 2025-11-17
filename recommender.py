@@ -73,6 +73,14 @@ def load_embeddings():
     print(f"✅ Embeddings loaded: {_embeddings.shape[0]} movies from database")
 
 
+def normalize_scores(scores):
+    """Normalize scores to [0, 1] range."""
+    min_val, max_val = scores.min(), scores.max()
+    if max_val - min_val < 1e-8:
+        return np.zeros_like(scores)
+    return (scores - min_val) / (max_val - min_val)
+
+
 def get_user_interactions(user_id):
     """Get user's interactions from database."""
     watched = []
@@ -111,22 +119,19 @@ def compute_interest_vector(watched, ratings):
     
     watched_embeddings = _embeddings[watched_indices]
     
-    # Apply time decay and rating weights
+    # Apply rating weights only (no time decay)
     weights = []
     for item in watched:
         if item['movie_id'] in _movie_to_idx:
-            # Time decay
-            days_ago = (datetime.utcnow() - item['timestamp']).days
-            time_weight = 0.5 ** (days_ago / 14)
-            
-            # Rating weight
+            # Rating weight: normalize to [0, 1]
             rating_weight = ratings.get(item['movie_id'], 5.0) / 10.0
-            
-            weights.append(time_weight * rating_weight)
+            weights.append(rating_weight)
     
     weights = np.array(weights)
-    if len(weights) > 0:
+    if len(weights) > 0 and weights.sum() > 0:
         weights = weights / weights.sum()
+    else:
+        weights = np.ones(len(weights)) / len(weights)
     
     # Weighted average
     user_vector = np.average(watched_embeddings, axis=0, weights=weights)
@@ -136,11 +141,11 @@ def compute_interest_vector(watched, ratings):
 
 
 def compute_discovery_vector(skipped, ratings):
-    """Discovery Vector: Dissimilarity to skipped/disliked movies."""
+    """Discovery Vector: HIGH scores for movies DISSIMILAR to disliked content."""
     disliked = skipped + [mid for mid, rating in ratings.items() if rating < 5.0]
     
     if not disliked:
-        return np.zeros(len(_embeddings))
+        return np.ones(len(_embeddings))  # No dislikes = all movies are fine
     
     disliked_indices = [
         _movie_to_idx[mid] for mid in disliked 
@@ -148,15 +153,14 @@ def compute_discovery_vector(skipped, ratings):
     ]
     
     if not disliked_indices:
-        return np.zeros(len(_embeddings))
+        return np.ones(len(_embeddings))
     
     disliked_embeddings = _embeddings[disliked_indices]
     bad_vector = np.mean(disliked_embeddings, axis=0)
-    dissimilarities = -(_embeddings @ bad_vector)
+    similarities = _embeddings @ bad_vector
     
-    # Normalize
-    dissimilarities = (dissimilarities - dissimilarities.min()) / \
-                     (dissimilarities.max() - dissimilarities.min() + 1e-8)
+    # Convert similarity to dissimilarity: low similarity = high score
+    dissimilarities = 1 - normalize_scores(similarities)
     
     return dissimilarities
 
@@ -208,6 +212,7 @@ def compute_category_vector(watched):
             score = sum(genre_prefs.get(g, 0) for g in movie_genres)
             scores[idx] = score
     
+    # Normalize scores
     if scores.max() > 0:
         scores = scores / scores.max()
     
@@ -256,7 +261,7 @@ def mmr_rerank(candidate_indices, relevance_scores, k, lambda_param):
     return selected
 
 
-def get_recommendations(user_id, num_recommendations=10, lambda_param=0.7):
+def get_recommendations(user_id, num_recommendations=10, lambda_param=0.7, debug=False):
     """Generate recommendations for a user."""
     load_embeddings()  # Ensure embeddings are loaded
     
@@ -284,8 +289,24 @@ def get_recommendations(user_id, num_recommendations=10, lambda_param=0.7):
     collaborative_scores = compute_collaborative_vector(watched)
     category_scores = compute_category_vector(watched)
     
+    # CRITICAL: Normalize all vectors to [0, 1] scale
+    interest_scores = normalize_scores(interest_scores)
+    discovery_scores = normalize_scores(discovery_scores)  # Normalize again to be sure
+    collaborative_scores = normalize_scores(collaborative_scores)
+    category_scores = normalize_scores(category_scores)  # Already normalized but ensure consistency
+    
+    # Debug output
+    if debug:
+        print(f"Interest range: [{interest_scores.min():.3f}, {interest_scores.max():.3f}]")
+        print(f"Discovery range: [{discovery_scores.min():.3f}, {discovery_scores.max():.3f}]")
+        print(f"Collaborative range: [{collaborative_scores.min():.3f}, {collaborative_scores.max():.3f}]")
+        print(f"Category range: [{category_scores.min():.3f}, {category_scores.max():.3f}]")
+    
     # Adaptive weighting
     weights = compute_adaptive_weights(len(watched))
+    
+    if debug:
+        print(f"Weights: {weights}")
     
     # Combine
     combined_scores = (
