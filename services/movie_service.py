@@ -29,28 +29,7 @@ class MovieService:
         # Apply search
         if search:
             search_pattern = f'%{search}%'
-            
-            # Search in credits too
-            credit_matches = Credit.query.filter(
-                Credit.person_name.ilike(search_pattern)
-            ).all()
-            credit_movie_ids = [c.movie_id for c in credit_matches]
-            
-            if credit_movie_ids:
-                query = query.filter(
-                    or_(
-                        Movie.title.ilike(search_pattern),
-                        Movie.overview.ilike(search_pattern),
-                        Movie.id.in_(credit_movie_ids)
-                    )
-                )
-            else:
-                query = query.filter(
-                    or_(
-                        Movie.title.ilike(search_pattern),
-                        Movie.overview.ilike(search_pattern)
-                    )
-                )
+            query = query.filter(Movie.title.ilike(search_pattern))
         
         # Apply rating filter
         if min_rating:
