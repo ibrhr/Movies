@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: movies-app
+    restart: unless-stopped
+    ports:
+      - "80:8000"
+    environment:
+      # Database - Use Supabase connection string
+      - DATABASE_URL=${DATABASE_URL}
+      
+      # Flask configuration
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+      
+      # API Keys
+      - TMDB_API_KEY=${TMDB_API_KEY}
+      - TMDB_BASE_URL=${TMDB_BASE_URL:-https://api.themoviedb.org/3}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+      
+      # ProtonMail SMTP Configuration
+      - PROTON_SMTP_SERVER=${PROTON_SMTP_SERVER:-smtp.protonmail.ch}
+      - PROTON_SMTP_PORT=${PROTON_SMTP_PORT:-587}
+      - PROTON_EMAIL=${PROTON_EMAIL}
+      - PROTON_PASSWORD=${PROTON_PASSWORD}
+      - PROTON_FROM_EMAIL=${PROTON_FROM_EMAIL}
+      - PROTON_USE_TLS=${PROTON_USE_TLS:-true}
+      
+    volumes:
+      # Persistent storage for embeddings
+      - embeddings_data:/app/data
+      - app_logs:/app/logs
+    
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+    networks:
+      - app_network
+
+volumes:
+  embeddings_data:
+    driver: local
+  app_logs:
+    driver: local
+
+networks:
+  app_network:
+    driver: bridge

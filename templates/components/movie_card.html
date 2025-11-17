@@ -1,0 +1,128 @@
+{# 
+  Reusable Movie Card Component
+  
+  Usage:
+  {% from 'components/movie_card.html' import movie_card %}
+  {{ movie_card(movie, is_authenticated=current_user.is_authenticated, show_watchlist_btn=True, watchlist_movie_ids=watchlist_movie_ids) }}
+#}
+
+{% macro movie_card(movie, is_authenticated=False, show_watchlist_btn=False, watchlist_movie_ids=[], show_watched_badge=False, watch_date=None, user_rating=None, similarity_score=None) %}
+<div class="group relative bg-slate-800 rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-300 hover:scale-105 flex flex-col">
+    <!-- Movie Poster -->
+    <a href="{{ url_for('movies.detail', movie_id=movie.id) }}" class="block flex-shrink-0 relative">
+        {% if movie.get_poster_url() %}
+        <img src="{{ movie.get_poster_url('w342') }}" 
+             class="w-full aspect-[2/3] object-cover" 
+             alt="{{ movie.title }}" 
+             loading="lazy">
+        {% else %}
+        <div class="w-full aspect-[2/3] bg-slate-700 flex items-center justify-center">
+            <i data-lucide="film" class="w-16 h-16 text-slate-500"></i>
+        </div>
+        {% endif %}
+        
+        <!-- Hover Overlay -->
+        <div class="absolute inset-0 bg-gradient-to-t from-slate-900 via-slate-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div class="absolute bottom-0 left-0 right-0 p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="flex items-center text-amber-400 font-semibold">
+                        <i data-lucide="star" class="w-4 h-4 fill-current mr-1"></i>
+                        {{ "%.1f"|format(movie.vote_average or 0) }}
+                    </span>
+                    {% if movie.content_rating %}
+                    <span class="px-2 py-1 bg-slate-700 border-2 border-slate-500 text-slate-200 text-xs font-bold rounded">
+                        {{ movie.content_rating }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </a>
+    
+    <!-- Watched Badge -->
+    {% if show_watched_badge %}
+    <div class="absolute top-2 right-2 z-10">
+        <span class="inline-flex items-center gap-1 px-2 py-1 bg-emerald-600 text-white rounded-md text-xs font-semibold shadow-lg">
+            <i data-lucide="check-circle" class="w-3 h-3"></i>
+            Watched
+        </span>
+    </div>
+    {% endif %}
+    
+    <!-- Card Body -->
+    <div class="p-3 flex flex-col flex-grow">
+        <h6 class="font-semibold text-white text-sm mb-2 line-clamp-2 leading-tight h-10">
+            {{ movie.title }}
+        </h6>
+        
+        <div class="flex items-center justify-between text-xs text-slate-400 mb-3">
+            {% if movie.release_date %}
+            <span class="flex items-center">
+                <i data-lucide="calendar" class="w-3 h-3 mr-1"></i>
+                {% if movie.release_date is string %}
+                    {{ movie.release_date[:4] }}
+                {% else %}
+                    {{ movie.release_date.strftime('%Y') }}
+                {% endif %}
+            </span>
+            {% endif %}
+            <span class="flex items-center text-amber-400">
+                <i data-lucide="star" class="w-3 h-3 fill-current mr-1"></i>
+                {{ "%.1f"|format(movie.vote_average or 0) }}
+            </span>
+        </div>
+        
+        <!-- Watch Date (for watched movies) -->
+        {% if watch_date %}
+        <p class="text-slate-400 text-xs mb-2 flex items-center gap-1">
+            <i data-lucide="clock" class="w-3 h-3"></i>
+            Watched: {{ watch_date.strftime('%b %d, %Y') }}
+        </p>
+        {% endif %}
+        
+        <!-- User Rating (for watched movies) -->
+        {% if user_rating %}
+        <div class="mb-3">
+            <span class="px-2 py-1 bg-blue-600 text-white rounded text-xs font-semibold">
+                You: {{ user_rating }}/10
+            </span>
+        </div>
+        {% endif %}
+        
+        <!-- Similarity Score (for smart search) -->
+        {% if similarity_score %}
+        <div class="mb-3 flex items-center gap-1 text-sm text-emerald-400">
+            <i data-lucide="check-circle" class="w-4 h-4"></i>
+            {{ "%.0f"|format(similarity_score * 100) }}% match
+        </div>
+        {% endif %}
+        
+        <!-- Action Buttons -->
+        <div class="flex gap-2 mt-auto">
+            {% if show_watchlist_btn and is_authenticated %}
+                {% if movie.id in watchlist_movie_ids %}
+                <button type="button"
+                        data-movie-id="{{ movie.id }}"
+                        data-action="remove"
+                        class="watchlist-btn p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200" 
+                        title="Remove from Watchlist">
+                    <i data-lucide="bookmark-check" class="w-4 h-4"></i>
+                </button>
+                {% else %}
+                <button type="button"
+                        data-movie-id="{{ movie.id }}"
+                        data-action="add"
+                        class="watchlist-btn p-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white border border-slate-600 rounded-lg transition-all duration-200" 
+                        title="Add to Watchlist">
+                    <i data-lucide="bookmark-plus" class="w-4 h-4"></i>
+                </button>
+                {% endif %}
+            {% endif %}
+            <a href="{{ url_for('movies.detail', movie_id=movie.id) }}" 
+               class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-lg text-center transition-colors duration-200">
+                Details
+            </a>
+        </div>
+    </div>
+</div>
+{% endmacro %}

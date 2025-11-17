@@ -1,0 +1,153 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header -->
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-6 mb-8">
+        <div>
+            <h1 class="text-4xl font-bold text-white mb-2 flex items-center gap-3">
+                <i data-lucide="star" class="w-10 h-10 text-amber-400"></i>
+                Your Recommendations
+            </h1>
+            <p class="text-slate-400">Personalized picks based on your taste</p>
+        </div>
+        <div class="lg:text-right">
+            <form method="GET" action="{{ url_for('movies.recommendations') }}">
+                <label class="block text-sm font-medium text-slate-300 mb-2">Diversity</label>
+                <input type="range" name="lambda" min="0" max="1" step="0.1" value="{{ lambda_param }}" 
+                       class="w-40 accent-blue-600"
+                       onchange="this.form.submit()">
+                <div class="text-sm text-slate-400 mt-1">
+                    {{ "%.1f"|format(lambda_param) }} 
+                    ({{ "More Relevant" if lambda_param < 0.5 else "More Diverse" if lambda_param > 0.5 else "Balanced" }})
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {% if recommendations %}
+    <!-- Recommendations List -->
+    <div class="space-y-6">
+        {% for rec in recommendations %}
+        <div class="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden hover:border-slate-600 transition-colors">
+            <div class="p-6">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    <!-- Poster -->
+                    <div class="md:col-span-2">
+                        <a href="{{ url_for('movies.detail', movie_id=rec.movie.id) }}" class="block">
+                            {% if rec.movie.get_poster_url() %}
+                            <img src="{{ rec.movie.get_poster_url('w185') }}" 
+                                 class="w-full rounded-lg shadow-lg hover:shadow-xl transition-shadow" 
+                                 alt="{{ rec.movie.title }}">
+                            {% else %}
+                            <div class="w-full aspect-[2/3] bg-slate-700 rounded-lg flex items-center justify-center">
+                                <i data-lucide="film" class="w-16 h-16 text-slate-500"></i>
+                            </div>
+                            {% endif %}
+                        </a>
+                    </div>
+                    
+                    <!-- Movie Info -->
+                    <div class="md:col-span-6">
+                        <h2 class="text-2xl font-bold text-white mb-3">
+                            <a href="{{ url_for('movies.detail', movie_id=rec.movie.id) }}" 
+                               class="hover:text-blue-400 transition-colors">
+                                {{ rec.movie.title }}
+                            </a>
+                        </h2>
+                        <div class="flex flex-wrap items-center gap-3 mb-3">
+                            {% if rec.movie.content_rating %}
+                            <span class="px-3 py-1 bg-slate-700 border-2 border-slate-500 text-slate-200 rounded text-sm font-bold">
+                                {{ rec.movie.content_rating }}
+                            </span>
+                            {% endif %}
+                            {% if rec.movie.release_date %}
+                            <span class="text-slate-400">{{ rec.movie.release_date[:4] }}</span>
+                            {% endif %}
+                            <span class="flex items-center gap-1 text-amber-400">
+                                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                                {{ "%.1f"|format(rec.movie.vote_average or 0) }}
+                            </span>
+                        </div>
+                        
+                        <!-- Genres -->
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            {% for genre in rec.movie.genres %}
+                            <span class="px-3 py-1 bg-blue-900/50 border border-blue-700 text-blue-300 rounded-full text-sm">
+                                {{ genre.genre_name }}
+                            </span>
+                            {% endfor %}
+                        </div>
+                        
+                        <p class="text-slate-300 leading-relaxed">
+                            {{ rec.movie.overview[:200] }}{% if rec.movie.overview and rec.movie.overview|length > 200 %}...{% endif %}
+                        </p>
+                    </div>
+                    
+                    <!-- Explanation -->
+                    <div class="md:col-span-4">
+                        <div class="bg-slate-700/50 rounded-lg p-4 border border-slate-600">
+                            <h3 class="text-lg font-semibold text-white mb-4">Why recommended?</h3>
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-slate-300">Interest</span>
+                                        <span class="text-white font-medium">{{ "%.2f"|format(rec.explanation.interest) }}</span>
+                                    </div>
+                                    <div class="w-full bg-slate-600 rounded-full h-2">
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {{ (rec.explanation.interest * 100)|round|int }}%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-slate-300">Discovery</span>
+                                        <span class="text-white font-medium">{{ "%.2f"|format(rec.explanation.discovery) }}</span>
+                                    </div>
+                                    <div class="w-full bg-slate-600 rounded-full h-2">
+                                        <div class="bg-emerald-500 h-2 rounded-full" style="width: {{ (rec.explanation.discovery * 100)|round|int }}%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-slate-300">Collaborative</span>
+                                        <span class="text-white font-medium">{{ "%.2f"|format(rec.explanation.collaborative) }}</span>
+                                    </div>
+                                    <div class="w-full bg-slate-600 rounded-full h-2">
+                                        <div class="bg-cyan-500 h-2 rounded-full" style="width: {{ (rec.explanation.collaborative * 100)|round|int }}%"></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="flex justify-between text-sm mb-1">
+                                        <span class="text-slate-300">Genre Match</span>
+                                        <span class="text-white font-medium">{{ "%.2f"|format(rec.explanation.category) }}</span>
+                                    </div>
+                                    <div class="w-full bg-slate-600 rounded-full h-2">
+                                        <div class="bg-amber-500 h-2 rounded-full" style="width: {{ (rec.explanation.category * 100)|round|int }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border-t border-slate-600 mt-4 pt-4">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-slate-300 font-medium">Total Score:</span>
+                                    <span class="text-white font-bold text-lg">{{ "%.3f"|format(rec.score) }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <!-- Empty State -->
+    <div class="bg-blue-900/20 border border-blue-800 rounded-lg p-8 text-center">
+        <i data-lucide="info" class="w-16 h-16 text-blue-400 mx-auto mb-4"></i>
+        <h2 class="text-2xl font-semibold text-white mb-2">No recommendations yet!</h2>
+        <p class="text-blue-300 mb-4">
+            Start by <a href="{{ url_for('movies.browse') }}" class="underline hover:text-blue-200">browsing movies</a> and rating a few to get personalized recommendations.
+        </p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

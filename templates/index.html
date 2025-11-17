@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% from 'components/movie_card.html' import movie_card %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="mb-12">
+    <div class="max-w-4xl mx-auto text-center">
+        <div class="flex items-center justify-center space-x-3 mb-4">
+            <i data-lucide="film" class="w-12 h-12 text-blue-500"></i>
+            <h1 class="text-5xl font-bold text-white">Welcome to MovieRec</h1>
+        </div>
+        <p class="text-xl text-slate-300 mb-8">
+            Discover your next favorite movie with personalized recommendations
+        </p>
+        {% if not current_user.is_authenticated %}
+        <div class="flex justify-center gap-4">
+            <a href="{{ url_for('auth.register') }}" 
+               class="px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+                Get Started
+            </a>
+            <a href="{{ url_for('movies.browse') }}" 
+               class="px-8 py-4 bg-slate-700 hover:bg-slate-600 text-slate-200 text-lg font-semibold rounded-lg border-2 border-slate-600 hover:border-slate-500 transition-all duration-200">
+                Browse Movies
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Popular Movies Section -->
+<div class="mb-8">
+    <h2 class="text-3xl font-bold text-white mb-6">Popular Movies</h2>
+    
+    <!-- Movie Grid -->
+    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-6">
+        {% for movie in movies %}
+            {{ movie_card(movie, is_authenticated=current_user.is_authenticated, show_watchlist_btn=True, watchlist_movie_ids=watchlist_movie_ids) }}
+        {% endfor %}
+    </div>
+</div>
+
+<!-- CTA Section for Authenticated Users -->
+{% if current_user.is_authenticated %}
+<div class="text-center mt-12">
+    <a href="{{ url_for('movies.recommendations') }}" 
+       class="inline-flex items-center space-x-2 px-8 py-4 bg-emerald-600 hover:bg-emerald-700 text-white text-lg font-semibold rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105">
+        <i data-lucide="sparkles" class="w-6 h-6"></i>
+        <span>Get My Recommendations</span>
+    </a>
+</div>
+{% endif %}
+{% endblock %}

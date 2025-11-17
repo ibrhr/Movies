@@ -1,0 +1,22 @@
+/* Custom styles for MovieRec - Tailwind CSS */
+
+/* Only custom animations and utilities not available in Tailwind */
+
+/* Smooth fade-in animation for page load */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Optional: Add any custom print styles here if needed */
+@media print {
+    nav, footer {
+        display: none;
+    }
+}

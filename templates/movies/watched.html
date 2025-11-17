@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+{% from 'components/movie_card.html' import movie_card %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Header with Sort -->
+    <div class="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 mb-8">
+        <div>
+            <h1 class="text-4xl font-bold text-white mb-2 flex items-center gap-3">
+                <i data-lucide="eye" class="w-10 h-10 text-emerald-500"></i>
+                Watched Movies
+            </h1>
+            <p class="text-slate-400">Your complete watch history ({{ movies.total }} movies)</p>
+        </div>
+        
+        {% if movies.total > 0 %}
+        <!-- Sort Dropdown -->
+        <div class="relative" x-data="{ open: false }">
+            <button @click="open = !open" 
+                    @click.away="open = false"
+                    class="flex items-center space-x-2 px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors border border-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <i data-lucide="arrow-down-up" class="w-4 h-4"></i>
+                <span class="text-sm">
+                    Sort by: 
+                    {% if sort_by == 'movie_rating' %}Movie Rating
+                    {% elif sort_by == 'user_rating' %}My Rating
+                    {% elif sort_by == 'title' %}Title (A-Z)
+                    {% else %}Watch Date
+                    {% endif %}
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </button>
+            
+            <div x-show="open" 
+                 x-transition
+                 class="absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl z-10">
+                <a href="{{ url_for('movies.watched', sort='watch_date') }}" 
+                   class="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 transition-colors {% if sort_by == 'watch_date' or not sort_by %}bg-slate-700 text-white{% endif %} first:rounded-t-lg">
+                    <i data-lucide="clock" class="w-4 h-4"></i>
+                    Watch Date (Recent First)
+                </a>
+                <a href="{{ url_for('movies.watched', sort='user_rating') }}" 
+                   class="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 transition-colors {% if sort_by == 'user_rating' %}bg-slate-700 text-white{% endif %}">
+                    <i data-lucide="star" class="w-4 h-4 text-amber-400 fill-current"></i>
+                    My Rating
+                </a>
+                <a href="{{ url_for('movies.watched', sort='movie_rating') }}" 
+                   class="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 transition-colors {% if sort_by == 'movie_rating' %}bg-slate-700 text-white{% endif %}">
+                    <i data-lucide="award" class="w-4 h-4"></i>
+                    Movie Rating
+                </a>
+                <a href="{{ url_for('movies.watched', sort='title') }}" 
+                   class="flex items-center gap-2 px-4 py-2 text-sm text-slate-300 hover:bg-slate-700 transition-colors {% if sort_by == 'title' %}bg-slate-700 text-white{% endif %} last:rounded-b-lg">
+                    <i data-lucide="arrow-down-a-z" class="w-4 h-4"></i>
+                    Title (A-Z)
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% if movies.items %}
+    <!-- Movies Grid -->
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 mb-8">
+        {% for item in movies.items %}
+        {% set movie = item.movie %}
+            {{ movie_card(movie, show_watched_badge=True, watch_date=item.watch_date, user_rating=item.user_rating) }}
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if movies.pages > 1 %}
+    <nav aria-label="Watched movies pagination" class="flex justify-center">
+        <ul class="flex items-center gap-1">
+            <li>
+                {% if movies.has_prev %}
+                <a href="{{ url_for('movies.watched', page=movies.prev_num, sort=sort_by) }}" 
+                   class="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors border border-slate-700">
+                    Previous
+                </a>
+                {% else %}
+                <span class="px-4 py-2 bg-slate-800/50 text-slate-600 rounded-lg border border-slate-700 cursor-not-allowed">
+                    Previous
+                </span>
+                {% endif %}
+            </li>
+            
+            {% for page_num in movies.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                {% if page_num %}
+                <li>
+                    <a href="{{ url_for('movies.watched', page=page_num, sort=sort_by) }}" 
+                       class="px-4 py-2 {% if page_num == movies.page %}bg-blue-600 text-white{% else %}bg-slate-800 text-slate-300 hover:bg-slate-700{% endif %} rounded-lg transition-colors border border-slate-700">
+                        {{ page_num }}
+                    </a>
+                </li>
+                {% else %}
+                <li>
+                    <span class="px-3 py-2 text-slate-600">...</span>
+                </li>
+                {% endif %}
+            {% endfor %}
+            
+            <li>
+                {% if movies.has_next %}
+                <a href="{{ url_for('movies.watched', page=movies.next_num, sort=sort_by) }}" 
+                   class="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors border border-slate-700">
+                    Next
+                </a>
+                {% else %}
+                <span class="px-4 py-2 bg-slate-800/50 text-slate-600 rounded-lg border border-slate-700 cursor-not-allowed">
+                    Next
+                </span>
+                {% endif %}
+            </li>
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="text-center py-12">
+        <i data-lucide="eye-off" class="w-24 h-24 text-slate-600 mx-auto mb-4"></i>
+        <h3 class="text-2xl font-semibold text-white mb-2">No Watched Movies Yet</h3>
+        <p class="text-slate-400 mb-6">Start marking movies as watched to build your watch history!</p>
+        <div class="flex flex-wrap justify-center gap-3">
+            <a href="{{ url_for('movies.browse') }}" 
+               class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                <i data-lucide="film" class="w-5 h-5"></i>
+                Browse Movies
+            </a>
+            <a href="{{ url_for('movies.recommendations') }}" 
+               class="inline-flex items-center gap-2 px-6 py-3 bg-slate-700 text-white border border-blue-600 rounded-lg hover:bg-slate-600 transition-colors font-medium">
+                <i data-lucide="star" class="w-5 h-5"></i>
+                Get Recommendations
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,289 @@
+{% extends "base.html" %}
+{% from 'components/movie_card.html' import movie_card %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Page Title -->
+    <h1 class="text-4xl font-bold text-white mb-6 flex items-center gap-3">
+        <i data-lucide="sparkles" class="w-10 h-10 text-amber-400"></i>
+        Smart Search
+    </h1>
+    
+    <!-- How It Works -->
+    <div class="bg-gradient-to-r from-blue-900/30 to-purple-900/30 border border-blue-800/50 rounded-lg p-6 mb-6">
+        <div class="flex items-start gap-3 mb-4">
+            <i data-lucide="sparkles" class="w-6 h-6 text-amber-400 flex-shrink-0 mt-1"></i>
+            <div class="flex-1">
+                <h2 class="text-blue-300 font-semibold text-lg mb-2">How Smart Search Works</h2>
+                <p class="text-blue-200 text-sm mb-3">
+                    Our AI-powered search understands the <strong>meaning</strong> behind your words, not just keywords. 
+                    It analyzes multiple aspects of movies to find the perfect match:
+                </p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div class="flex items-start gap-2">
+                        <i data-lucide="file-text" class="w-4 h-4 text-blue-400 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="text-blue-300 font-medium">Plot & Story (30%)</span>
+                            <p class="text-blue-200/80 text-xs">Movie descriptions and themes</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i data-lucide="tag" class="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="text-purple-300 font-medium">Genre (25%)</span>
+                            <p class="text-purple-200/80 text-xs">Action, Drama, Comedy, etc.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i data-lucide="users" class="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="text-green-300 font-medium">Cast (15%)</span>
+                            <p class="text-green-200/80 text-xs">Actors and their styles</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i data-lucide="clapperboard" class="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="text-amber-300 font-medium">Director (10%)</span>
+                            <p class="text-amber-200/80 text-xs">Directorial style and vision</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i data-lucide="hash" class="w-4 h-4 text-pink-400 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="text-pink-300 font-medium">Keywords (8%)</span>
+                            <p class="text-pink-200/80 text-xs">Tags and descriptors</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i data-lucide="star" class="w-4 h-4 text-yellow-400 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="text-yellow-300 font-medium">Rating (7%)</span>
+                            <p class="text-yellow-200/80 text-xs">User ratings and quality</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i data-lucide="calendar" class="w-4 h-4 text-indigo-400 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <span class="text-indigo-300 font-medium">Year (5%)</span>
+                            <p class="text-indigo-200/80 text-xs">Era and time period</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Example Searches -->
+    <div class="bg-slate-800/50 border border-slate-700 rounded-lg p-6 mb-6">
+        <div class="flex items-start gap-3">
+            <i data-lucide="lightbulb" class="w-6 h-6 text-amber-400 flex-shrink-0 mt-1"></i>
+            <div class="flex-1">
+                <p class="text-slate-300 font-semibold mb-3">Try These Smart Searches:</p>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div class="bg-slate-800 rounded-lg p-3 border border-slate-700 hover:border-blue-600 transition-colors cursor-pointer" onclick="document.querySelector('input[name=q]').value = this.querySelector('.search-text').innerText; document.querySelector('form').submit();">
+                        <p class="text-blue-400 text-sm font-medium mb-1">🎭 By Mood & Theme</p>
+                        <p class="text-slate-300 text-sm search-text">A heartwarming story about overcoming adversity and finding hope</p>
+                    </div>
+                    <div class="bg-slate-800 rounded-lg p-3 border border-slate-700 hover:border-blue-600 transition-colors cursor-pointer" onclick="document.querySelector('input[name=q]').value = this.querySelector('.search-text').innerText; document.querySelector('form').submit();">
+                        <p class="text-green-400 text-sm font-medium mb-1">🎬 By Plot Elements</p>
+                        <p class="text-slate-300 text-sm search-text">Time travel paradox with complex narrative structure</p>
+                    </div>
+                    <div class="bg-slate-800 rounded-lg p-3 border border-slate-700 hover:border-blue-600 transition-colors cursor-pointer" onclick="document.querySelector('input[name=q]').value = this.querySelector('.search-text').innerText; document.querySelector('form').submit();">
+                        <p class="text-purple-400 text-sm font-medium mb-1">⚡ By Atmosphere</p>
+                        <p class="text-slate-300 text-sm search-text">Dark cyberpunk dystopia with neon-lit streets and corporate conspiracy</p>
+                    </div>
+                    <div class="bg-slate-800 rounded-lg p-3 border border-slate-700 hover:border-blue-600 transition-colors cursor-pointer" onclick="document.querySelector('input[name=q]').value = this.querySelector('.search-text').innerText; document.querySelector('form').submit();">
+                        <p class="text-amber-400 text-sm font-medium mb-1">🎯 By Style & Tone</p>
+                        <p class="text-slate-300 text-sm search-text">Witty dialogue, fast-paced action, buddy cop dynamic</p>
+                    </div>
+                    <div class="bg-slate-800 rounded-lg p-3 border border-slate-700 hover:border-blue-600 transition-colors cursor-pointer" onclick="document.querySelector('input[name=q]').value = this.querySelector('.search-text').innerText; document.querySelector('form').submit();">
+                        <p class="text-pink-400 text-sm font-medium mb-1">💕 By Emotional Journey</p>
+                        <p class="text-slate-300 text-sm search-text">Bittersweet romance with beautiful cinematography and emotional depth</p>
+                    </div>
+                    <div class="bg-slate-800 rounded-lg p-3 border border-slate-700 hover:border-blue-600 transition-colors cursor-pointer" onclick="document.querySelector('input[name=q]').value = this.querySelector('.search-text').innerText; document.querySelector('form').submit();">
+                        <p class="text-red-400 text-sm font-medium mb-1">🔥 By Intensity</p>
+                        <p class="text-slate-300 text-sm search-text">High-stakes heist with clever twists and ensemble cast</p>
+                    </div>
+                </div>
+                <p class="text-slate-400 text-xs mt-3">💡 Click any example to try it! Or describe movies in your own words.</p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Search Form -->
+    <form method="GET" action="{{ url_for('movies.smart_search') }}" class="mb-8">
+        <!-- Search Input -->
+        <div class="flex gap-2 mb-6">
+            <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i data-lucide="sparkles" class="w-5 h-5 text-slate-400"></i>
+                </div>
+                <input type="text" 
+                       name="q" 
+                       placeholder="Describe the movie you're looking for..." 
+                       value="{{ query }}"
+                       autofocus
+                       class="w-full pl-12 pr-4 py-4 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg">
+            </div>
+            <button type="submit" 
+                    class="px-8 py-4 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium flex items-center gap-2 whitespace-nowrap">
+                <i data-lucide="search" class="w-5 h-5"></i>
+                Search
+            </button>
+        </div>
+        
+        <!-- Filters Card -->
+        <div class="bg-slate-800 rounded-lg border border-slate-700 p-6">
+            <h6 class="text-white font-semibold mb-4 flex items-center gap-2">
+                <i data-lucide="filter" class="w-5 h-5"></i>
+                Filters
+            </h6>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Content Rating -->
+                <div>
+                    <label for="rating" class="block text-sm font-medium text-slate-300 mb-2">
+                        Content Rating
+                    </label>
+                    <select name="rating" 
+                            id="rating"
+                            class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        <option value="">All Ratings</option>
+                        {% for rating in available_ratings %}
+                        <option value="{{ rating }}" {% if selected_rating == rating %}selected{% endif %}>
+                            {{ rating }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                    <p class="text-xs text-slate-400 mt-1">Filter by age appropriateness</p>
+                </div>
+                
+                <!-- From Year -->
+                <div>
+                    <label for="year_from" class="block text-sm font-medium text-slate-300 mb-2">
+                        From Year
+                    </label>
+                    <input type="number" 
+                           name="year_from" 
+                           id="year_from" 
+                           placeholder="e.g., 2000"
+                           min="1900"
+                           max="2025"
+                           value="{{ year_from or '' }}"
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-slate-400 mt-1">Earliest release year</p>
+                </div>
+                
+                <!-- To Year -->
+                <div>
+                    <label for="year_to" class="block text-sm font-medium text-slate-300 mb-2">
+                        To Year
+                    </label>
+                    <input type="number" 
+                           name="year_to" 
+                           id="year_to" 
+                           placeholder="e.g., 2024"
+                           min="1900"
+                           max="2025"
+                           value="{{ year_to or '' }}"
+                           class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <p class="text-xs text-slate-400 mt-1">Latest release year</p>
+                </div>
+            </div>
+        </div>
+    </form>
+    
+    {% if query %}
+        {% if movies %}
+            <!-- Results Header -->
+            <div class="mb-6">
+                <h2 class="text-2xl font-semibold text-white">
+                    Found {{ total_results }} movie{{ 's' if total_results != 1 else '' }} matching: 
+                    <span class="text-blue-400">"{{ query }}"</span>
+                </h2>
+            </div>
+            
+            <!-- Results Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 mb-8">
+                {% for movie in movies %}
+                    {{ movie_card(movie, similarity_score=movie.similarity_score) }}
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if total_pages > 1 %}
+            <nav aria-label="Search results pagination" class="flex justify-center">
+                <ul class="flex items-center gap-1">
+                    <li>
+                        {% if page > 1 %}
+                        <a href="{{ url_for('movies.smart_search', q=query, page=page-1, rating=selected_rating, year_from=year_from, year_to=year_to) }}" 
+                           class="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors border border-slate-700">
+                            Previous
+                        </a>
+                        {% else %}
+                        <span class="px-4 py-2 bg-slate-800/50 text-slate-600 rounded-lg border border-slate-700 cursor-not-allowed">
+                            Previous
+                        </span>
+                        {% endif %}
+                    </li>
+                    
+                    {% for p in range(1, total_pages + 1) %}
+                        {% if p == page %}
+                        <li>
+                            <span class="px-4 py-2 bg-blue-600 text-white rounded-lg border border-slate-700">
+                                {{ p }}
+                            </span>
+                        </li>
+                        {% elif p <= 3 or p > total_pages - 3 or (p >= page - 2 and p <= page + 2) %}
+                        <li>
+                            <a href="{{ url_for('movies.smart_search', q=query, page=p, rating=selected_rating, year_from=year_from, year_to=year_to) }}" 
+                               class="px-4 py-2 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700">
+                                {{ p }}
+                            </a>
+                        </li>
+                        {% elif p == 4 or p == total_pages - 3 %}
+                        <li>
+                            <span class="px-3 py-2 text-slate-600">...</span>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    <li>
+                        {% if page < total_pages %}
+                        <a href="{{ url_for('movies.smart_search', q=query, page=page+1, rating=selected_rating, year_from=year_from, year_to=year_to) }}" 
+                           class="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors border border-slate-700">
+                            Next
+                        </a>
+                        {% else %}
+                        <span class="px-4 py-2 bg-slate-800/50 text-slate-600 rounded-lg border border-slate-700 cursor-not-allowed">
+                            Next
+                        </span>
+                        {% endif %}
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+            
+        {% else %}
+            <!-- No Results -->
+            <div class="bg-amber-900/20 border border-amber-800 rounded-lg p-6">
+                <div class="flex items-start gap-3">
+                    <i data-lucide="alert-triangle" class="w-6 h-6 text-amber-400 flex-shrink-0 mt-0.5"></i>
+                    <div>
+                        <p class="text-amber-300">
+                            No movies found matching your description. Try a different search!
+                        </p>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <!-- Empty State -->
+        <div class="text-center py-12">
+            <i data-lucide="sparkles" class="w-24 h-24 text-amber-400 mx-auto mb-4"></i>
+            <h3 class="text-2xl font-semibold text-white mb-2">Describe what you want to watch!</h3>
+            <p class="text-slate-400">Use the search box above to find movies that match your mood.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

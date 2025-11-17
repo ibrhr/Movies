@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="flex justify-center items-center min-h-[calc(100vh-20rem)]">
+    <div class="w-full max-w-md">
+        <!-- Card -->
+        <div class="bg-slate-800 rounded-xl shadow-2xl border border-slate-700 overflow-hidden">
+            <!-- Header -->
+            <div class="bg-slate-900 border-b border-slate-700 px-8 py-6">
+                <h3 class="text-2xl font-bold text-center text-white">Log In</h3>
+                <p class="text-center text-slate-400 text-sm mt-2">Welcome back to MovieRec</p>
+            </div>
+            
+            <!-- Body -->
+            <div class="px-8 py-6">
+                <form method="POST" action="{{ url_for('auth.login') }}" class="space-y-6">
+                    {{ form.hidden_tag() }}
+                    
+                    <!-- Email Field -->
+                    <div>
+                        <label for="{{ form.email.id }}" class="block text-sm font-medium text-slate-300 mb-2">
+                            {{ form.email.label.text }}
+                        </label>
+                        {{ form.email(
+                            class="w-full px-4 py-3 bg-slate-700 border rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 " + 
+                            ("border-red-500 focus:ring-red-500" if form.email.errors else "border-slate-600"),
+                            autofocus=true,
+                            placeholder="Enter your email"
+                        ) }}
+                        {% if form.email.errors %}
+                            <div class="mt-2 text-sm text-red-400 flex items-center space-x-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                <span>{% for error in form.email.errors %}{{ error }}{% endfor %}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Password Field -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label for="{{ form.password.id }}" class="block text-sm font-medium text-slate-300">
+                                {{ form.password.label.text }}
+                            </label>
+                            <a href="{{ url_for('auth.reset_password_request') }}" 
+                               class="text-sm text-blue-400 hover:text-blue-300 transition-colors duration-200">
+                                Forgot password?
+                            </a>
+                        </div>
+                        {{ form.password(
+                            class="w-full px-4 py-3 bg-slate-700 border rounded-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 " + 
+                            ("border-red-500 focus:ring-red-500" if form.password.errors else "border-slate-600"),
+                            placeholder="Enter your password"
+                        ) }}
+                        {% if form.password.errors %}
+                            <div class="mt-2 text-sm text-red-400 flex items-center space-x-1">
+                                <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                                <span>{% for error in form.password.errors %}{{ error }}{% endfor %}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Remember Me Checkbox -->
+                    <div class="flex items-center">
+                        {{ form.remember_me(class="w-4 h-4 bg-slate-700 border-slate-600 rounded text-blue-600 focus:ring-2 focus:ring-blue-500 focus:ring-offset-0 transition-all duration-200") }}
+                        <label for="{{ form.remember_me.id }}" class="ml-2 text-sm text-slate-300">
+                            {{ form.remember_me.label.text }}
+                        </label>
+                    </div>
+                    
+                    <!-- Submit Button -->
+                    <div>
+                        {{ form.submit(class="w-full px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800") }}
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Footer -->
+            <div class="bg-slate-900 border-t border-slate-700 px-8 py-4 text-center">
+                <p class="text-sm text-slate-400">
+                    New to MovieRec? 
+                    <a href="{{ url_for('auth.register') }}" 
+                       class="text-blue-400 hover:text-blue-300 font-medium transition-colors duration-200">
+                        Create an account
+                    </a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

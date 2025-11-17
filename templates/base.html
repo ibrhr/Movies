@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ title }} - MovieRec{% endblock %}</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        slate: {
+                            850: '#1a2332',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Heroicons (for icons) -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        [x-cloak] { display: none !important; }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="min-h-screen flex flex-col bg-slate-900 text-slate-50 font-sans antialiased">
+    <!-- Navigation -->
+    <nav class="fixed top-0 left-0 right-0 z-50 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 shadow-lg" x-data="{ mobileMenuOpen: false }">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="{{ url_for('main.index') }}" class="flex items-center space-x-2 text-2xl font-bold text-white hover:text-blue-400 transition-colors duration-200">
+                        <i data-lucide="film" class="w-8 h-8"></i>
+                        <span>MovieRec</span>
+                    </a>
+                </div>
+
+                <!-- Desktop Navigation -->
+                <div class="hidden lg:flex items-center space-x-1">
+                    <a href="{{ url_for('movies.browse') }}" class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">
+                        Browse
+                    </a>
+                    <a href="{{ url_for('movies.smart_search') }}" class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">
+                        Smart Search
+                    </a>
+                    {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('movies.recommendations') }}" class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">
+                        For You
+                    </a>
+                    <a href="{{ url_for('movies.watchlist') }}" class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">
+                        Watchlist
+                    </a>
+                    <a href="{{ url_for('movies.watched') }}" class="px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">
+                        Watched
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- Search Bar & User Menu -->
+                <div class="hidden lg:flex items-center space-x-4">
+                    <!-- Search Form -->
+                    <form method="GET" action="{{ url_for('movies.search') }}">
+                        <div class="flex items-center">
+                            <input type="search" 
+                                   name="q" 
+                                   value="{{ request.args.get('q', '') }}"
+                                   placeholder="Search movies..." 
+                                   required
+                                   class="w-64 px-4 py-2 bg-slate-800 border border-slate-700 rounded-l-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                            <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-r-lg transition-colors duration-200">
+                                <i data-lucide="search" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </form>
+
+                    {% if current_user.is_authenticated %}
+                    <!-- User Dropdown -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" 
+                                @click.outside="open = false"
+                                class="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium transition-all duration-200">
+                            <i data-lucide="user-circle" class="w-5 h-5"></i>
+                            <span>{{ current_user.username }}</span>
+                            <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                        </button>
+                        <div x-show="open" 
+                             x-cloak
+                             x-transition:enter="transition ease-out duration-200"
+                             x-transition:enter-start="opacity-0 scale-95"
+                             x-transition:enter-end="opacity-100 scale-100"
+                             x-transition:leave="transition ease-in duration-150"
+                             x-transition:leave-start="opacity-100 scale-100"
+                             x-transition:leave-end="opacity-0 scale-95"
+                             class="absolute right-0 mt-2 w-48 bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-2 z-50">
+                            <a href="{{ url_for('movies.profile') }}" class="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors duration-200">
+                                <i data-lucide="user" class="w-5 h-5"></i>
+                                <span>Profile</span>
+                            </a>
+                            <div class="border-t border-slate-700 my-1"></div>
+                            <a href="{{ url_for('auth.logout') }}" class="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-700 transition-colors duration-200">
+                                <i data-lucide="log-out" class="w-5 h-5"></i>
+                                <span>Logout</span>
+                            </a>
+                        </div>
+                    </div>
+                    {% else %}
+                    <a href="{{ url_for('auth.login') }}" class="px-4 py-2 text-slate-300 hover:text-white font-medium transition-colors duration-200">
+                        Login
+                    </a>
+                    <a href="{{ url_for('auth.register') }}" class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                        Sign Up
+                    </a>
+                    {% endif %}
+                </div>
+
+                <!-- Mobile Menu Button -->
+                <div class="lg:hidden">
+                    <button @click="mobileMenuOpen = !mobileMenuOpen" class="p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div x-show="mobileMenuOpen" 
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 -translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             x-transition:leave="transition ease-in duration-150"
+             x-transition:leave-start="opacity-100 translate-y-0"
+             x-transition:leave-end="opacity-0 -translate-y-2"
+             class="lg:hidden border-t border-slate-800 bg-slate-900">
+            <div class="px-4 py-4 space-y-2">
+                <!-- Mobile Search -->
+                <form method="GET" action="{{ url_for('movies.search') }}" class="mb-4">
+                    <div class="flex items-center">
+                        <input type="search" 
+                               name="q" 
+                               value="{{ request.args.get('q', '') }}"
+                               placeholder="Search movies..." 
+                               required
+                               class="flex-1 px-4 py-2 bg-slate-800 border border-slate-700 rounded-l-lg text-slate-100 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-r-lg">
+                            <i data-lucide="search" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                </form>
+
+                <a href="{{ url_for('movies.browse') }}" class="block px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium">
+                    Browse
+                </a>
+                <a href="{{ url_for('movies.smart_search') }}" class="block px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium">
+                    Smart Search
+                </a>
+                {% if current_user.is_authenticated %}
+                <a href="{{ url_for('movies.recommendations') }}" class="block px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium">
+                    For You
+                </a>
+                <a href="{{ url_for('movies.watchlist') }}" class="block px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium">
+                    Watchlist
+                </a>
+                <a href="{{ url_for('movies.watched') }}" class="block px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium">
+                    Watched
+                </a>
+                <div class="border-t border-slate-700 my-2"></div>
+                <a href="{{ url_for('movies.profile') }}" class="block px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium">
+                    Profile
+                </a>
+                <a href="{{ url_for('auth.logout') }}" class="block px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium">
+                    Logout
+                </a>
+                {% else %}
+                <div class="border-t border-slate-700 my-2"></div>
+                <a href="{{ url_for('auth.login') }}" class="block px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-lg font-medium">
+                    Login
+                </a>
+                <a href="{{ url_for('auth.register') }}" class="block px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-center">
+                    Sign Up
+                </a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Flash Messages -->
+    <div class="mt-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="space-y-3 mb-6">
+                    {% for category, message in messages %}
+                    <div class="flex items-start p-4 rounded-lg border 
+                        {% if category == 'success' %}bg-emerald-900/20 border-emerald-500/50 text-emerald-300
+                        {% elif category == 'danger' or category == 'error' %}bg-red-900/20 border-red-500/50 text-red-300
+                        {% elif category == 'warning' %}bg-amber-900/20 border-amber-500/50 text-amber-300
+                        {% else %}bg-blue-900/20 border-blue-500/50 text-blue-300{% endif %}" 
+                        x-data="{ show: true }" 
+                        x-show="show"
+                        x-transition:enter="transition ease-out duration-300"
+                        x-transition:enter-start="opacity-0 transform scale-90"
+                        x-transition:enter-end="opacity-100 transform scale-100">
+                        <div class="flex-shrink-0">
+                            {% if category == 'success' %}
+                            <i data-lucide="check-circle" class="w-5 h-5"></i>
+                            {% elif category == 'danger' or category == 'error' %}
+                            <i data-lucide="x-circle" class="w-5 h-5"></i>
+                            {% elif category == 'warning' %}
+                            <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                            {% else %}
+                            <i data-lucide="info" class="w-5 h-5"></i>
+                            {% endif %}
+                        </div>
+                        <div class="ml-3 flex-1">
+                            <p class="text-sm font-medium">{{ message }}</p>
+                        </div>
+                        <button @click="show = false" class="flex-shrink-0 ml-4 text-slate-400 hover:text-white transition-colors duration-200">
+                            <i data-lucide="x" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 mt-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="mt-auto bg-slate-950 border-t border-slate-800 py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center">
+                <p class="text-lg font-semibold text-slate-200 mb-2">MovieRec - Personalized Movie Recommendations</p>
+                <p class="text-sm text-slate-400">Powered by TMDB API & Hybrid Recommendation Algorithm</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Alpine.js for interactive components -->
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <!-- Initialize Lucide Icons -->
+    <script>
+        // Initialize Lucide icons after page load
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+    
+    <!-- Watchlist AJAX Handler -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Handle watchlist add/remove button clicks (on movie cards)
+            document.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.watchlist-btn');
+                if (!btn) return;
+                
+                e.preventDefault();
+                
+                const movieId = btn.dataset.movieId;
+                const action = btn.dataset.action;
+                const url = action === 'add' 
+                    ? `/movies/${movieId}/watchlist/add`
+                    : `/movies/${movieId}/watchlist/remove`;
+                
+                // Disable button during request
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        // Toggle button state
+                        // Find the icon element (could be <i> or <svg> after Lucide processes it)
+                        let iconElement = btn.querySelector('i') || btn.querySelector('svg');
+                        
+                        if (action === 'add') {
+                            btn.dataset.action = 'remove';
+                            btn.className = 'watchlist-btn p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors duration-200';
+                            btn.title = 'Remove from Watchlist';
+                            
+                            // Replace icon element with new <i> tag
+                            if (iconElement) {
+                                const newIcon = document.createElement('i');
+                                newIcon.setAttribute('data-lucide', 'bookmark-check');
+                                newIcon.className = 'w-4 h-4';
+                                iconElement.replaceWith(newIcon);
+                            }
+                        } else {
+                            btn.dataset.action = 'add';
+                            btn.className = 'watchlist-btn p-2 bg-slate-700 hover:bg-slate-600 text-slate-300 hover:text-white border border-slate-600 rounded-lg transition-all duration-200';
+                            btn.title = 'Add to Watchlist';
+                            
+                            // Replace icon element with new <i> tag
+                            if (iconElement) {
+                                const newIcon = document.createElement('i');
+                                newIcon.setAttribute('data-lucide', 'bookmark-plus');
+                                newIcon.className = 'w-4 h-4';
+                                iconElement.replaceWith(newIcon);
+                            }
+                        }
+                        
+                        // Re-initialize icons for the changed button
+                        lucide.createIcons();
+                        
+                        // Show success message from server
+                        showNotification(data.message || 'Success!', 'success');
+                    } else {
+                        throw new Error(data.message || 'Request failed');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showNotification(error.message || 'Something went wrong. Please try again.', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            });
+            
+            // Simple notification function
+            function showNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.className = `fixed top-24 right-4 z-50 px-6 py-3 rounded-lg shadow-lg transform transition-all duration-300 ${
+                    type === 'success' 
+                        ? 'bg-emerald-600 text-white' 
+                        : 'bg-red-600 text-white'
+                }`;
+                notification.textContent = message;
+                notification.style.opacity = '0';
+                notification.style.transform = 'translateY(-20px)';
+                
+                document.body.appendChild(notification);
+                
+                // Fade in
+                setTimeout(() => {
+                    notification.style.opacity = '1';
+                    notification.style.transform = 'translateY(0)';
+                }, 10);
+                
+                // Fade out and remove
+                setTimeout(() => {
+                    notification.style.opacity = '0';
+                    notification.style.transform = 'translateY(-20px)';
+                    setTimeout(() => notification.remove(), 300);
+                }, 3000);
+            }
+            
+            // Handle watchlist remove button (on watchlist page - removes card)
+            document.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.watchlist-remove-btn');
+                if (!btn) return;
+                
+                e.preventDefault();
+                
+                const movieId = btn.dataset.movieId;
+                const url = `/movies/${movieId}/watchlist/remove`;
+                const card = btn.closest('.bg-slate-800'); // Find parent card
+                
+                // Disable button during request
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        // Animate card removal
+                        if (card) {
+                            card.style.transition = 'all 0.3s ease-out';
+                            card.style.opacity = '0';
+                            card.style.transform = 'scale(0.9)';
+                            
+                            setTimeout(() => {
+                                card.remove();
+                                
+                                // Check if grid is empty
+                                const grid = document.querySelector('.grid');
+                                if (grid && grid.children.length === 0) {
+                                    // Reload page to show "no movies" message
+                                    window.location.reload();
+                                }
+                            }, 300);
+                        }
+                        
+                        showNotification(data.message || 'Removed from watchlist!', 'success');
+                    } else {
+                        throw new Error(data.message || 'Request failed');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showNotification(error.message || 'Something went wrong. Please try again.', 'error');
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            });
+            
+            // Handle detail page watchlist button
+            document.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.detail-watchlist-btn');
+                if (!btn) return;
+                
+                e.preventDefault();
+                
+                const movieId = btn.dataset.movieId;
+                const action = btn.dataset.action;
+                const url = action === 'add' 
+                    ? `/movies/${movieId}/watchlist/add`
+                    : `/movies/${movieId}/watchlist/remove`;
+                
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        const icon = btn.querySelector('i') || btn.querySelector('svg');
+                        const span = btn.querySelector('span');
+                        
+                        if (action === 'add') {
+                            btn.dataset.action = 'remove';
+                            btn.className = 'detail-watchlist-btn w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors font-medium';
+                            span.textContent = 'Remove from Watchlist';
+                            
+                            if (icon) {
+                                const newIcon = document.createElement('i');
+                                newIcon.setAttribute('data-lucide', 'bookmark-minus');
+                                newIcon.className = 'w-5 h-5';
+                                icon.replaceWith(newIcon);
+                            }
+                        } else {
+                            btn.dataset.action = 'add';
+                            btn.className = 'detail-watchlist-btn w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 border border-red-600 hover:bg-red-600 text-white rounded-lg transition-colors font-medium';
+                            span.textContent = 'Add to Watchlist';
+                            
+                            if (icon) {
+                                const newIcon = document.createElement('i');
+                                newIcon.setAttribute('data-lucide', 'bookmark-plus');
+                                newIcon.className = 'w-5 h-5';
+                                icon.replaceWith(newIcon);
+                            }
+                        }
+                        
+                        lucide.createIcons();
+                        showNotification(data.message || 'Success!', 'success');
+                    } else {
+                        throw new Error(data.message || 'Request failed');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showNotification(error.message || 'Something went wrong. Please try again.', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            });
+            
+            // Handle detail page watch button
+            document.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.detail-watch-btn');
+                if (!btn) return;
+                
+                e.preventDefault();
+                
+                const movieId = btn.dataset.movieId;
+                const url = `/movies/${movieId}/watch`;
+                
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        const span = btn.querySelector('span');
+                        if (span) {
+                            span.textContent = 'Already Watched';
+                        }
+                        btn.disabled = true;
+                        btn.className = 'detail-watch-btn w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed';
+                        
+                        showNotification(data.message || 'Marked as watched!', 'success');
+                    } else {
+                        throw new Error(data.message || 'Request failed');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showNotification(error.message || 'Something went wrong. Please try again.', 'error');
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            });
+            
+            // Handle detail page rating submission
+            document.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.detail-rate-btn');
+                if (!btn) return;
+                
+                e.preventDefault();
+                
+                const movieId = btn.dataset.movieId;
+                const ratingInput = document.getElementById('rating-input');
+                const ratingValue = ratingInput ? ratingInput.value : null;
+                
+                if (!ratingValue || ratingValue === '') {
+                    showNotification('Please enter a rating', 'error');
+                    return;
+                }
+                
+                const rating = parseInt(ratingValue);
+                if (isNaN(rating) || rating < 0 || rating > 10) {
+                    showNotification('Rating must be between 0 and 10', 'error');
+                    return;
+                }
+                
+                const url = `/movies/${movieId}/rate`;
+                
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                        body: JSON.stringify({ rating: rating })
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        const label = document.getElementById('rating-label');
+                        if (label) {
+                            label.textContent = `Your Rating: ${rating}/10`;
+                        }
+                        
+                        // Update watch button if it exists
+                        const watchBtn = document.querySelector('.detail-watch-btn');
+                        if (watchBtn) {
+                            const watchSpan = watchBtn.querySelector('span');
+                            if (watchSpan) {
+                                watchSpan.textContent = 'Already Watched';
+                            }
+                            watchBtn.disabled = true;
+                            watchBtn.className = 'detail-watch-btn w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed';
+                        }
+                        
+                        showNotification(data.message || 'Rating submitted!', 'success');
+                    } else {
+                        throw new Error(data.message || 'Request failed');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showNotification(error.message || 'Something went wrong. Please try again.', 'error');
+                } finally {
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            });
+            
+            // Handle detail page skip button
+            document.addEventListener('click', async (e) => {
+                const btn = e.target.closest('.detail-skip-btn');
+                if (!btn) return;
+                
+                e.preventDefault();
+                
+                const movieId = btn.dataset.movieId;
+                const url = `/movies/${movieId}/skip`;
+                
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest',
+                        },
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (response.ok && data.success) {
+                        showNotification(data.message || 'Marked as not interested!', 'success');
+                        
+                        // Optional: redirect after a short delay
+                        setTimeout(() => {
+                            window.location.href = '/movies/browse';
+                        }, 1500);
+                    } else {
+                        throw new Error(data.message || 'Request failed');
+                    }
+                } catch (error) {
+                    console.error('Error:', error);
+                    showNotification(error.message || 'Something went wrong. Please try again.', 'error');
+                    btn.disabled = false;
+                    btn.style.opacity = '1';
+                }
+            });
+        });
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

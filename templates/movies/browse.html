@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% from 'components/movie_card.html' import movie_card %}
+
+{% block content %}
+<!-- Header with Sort and Actions -->
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+    <h1 class="text-3xl font-bold text-white">Browse Movies</h1>
+    <div class="flex flex-wrap gap-2">
+        <!-- Sort Dropdown -->
+        <div class="relative" x-data="{ sortOpen: false }">
+            <button @click="sortOpen = !sortOpen" 
+                    @click.away="sortOpen = false"
+                    class="flex items-center space-x-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 rounded-lg transition-colors duration-200">
+                <i data-lucide="arrow-down-up" class="w-4 h-4"></i>
+                <span class="text-sm font-medium">
+                    Sort: 
+                    {% if sort_by == 'rating' %}Rating
+                    {% elif sort_by == 'release_date_desc' %}Newest
+                    {% elif sort_by == 'release_date_asc' %}Oldest
+                    {% elif sort_by == 'title' %}Title (A-Z)
+                    {% elif sort_by == 'vote_count' %}Most Voted
+                    {% else %}Popularity
+                    {% endif %}
+                </span>
+                <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </button>
+            <div x-show="sortOpen"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95"
+                 class="absolute right-0 mt-2 w-56 bg-slate-800 border border-slate-700 rounded-lg shadow-xl py-2 z-50">
+                <a href="{{ url_for('movies.browse', genre=selected_genre, sort='popularity', min_rating=min_rating, year_from=year_from, year_to=year_to, min_votes=min_votes, content_rating=content_rating_filter, hide_watched='true' if hide_watched else '') }}"
+                   class="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 {% if sort_by == 'popularity' or not sort_by %}bg-slate-700 text-white{% endif %}">
+                    <i data-lucide="flame" class="w-4 h-4"></i>
+                    <span class="text-sm">Popularity</span>
+                </a>
+                <a href="{{ url_for('movies.browse', genre=selected_genre, sort='rating', min_rating=min_rating, year_from=year_from, year_to=year_to, min_votes=min_votes, content_rating=content_rating_filter, hide_watched='true' if hide_watched else '') }}"
+                   class="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 {% if sort_by == 'rating' %}bg-slate-700 text-white{% endif %}">
+                    <i data-lucide="star" class="w-4 h-4"></i>
+                    <span class="text-sm">Rating</span>
+                </a>
+                <a href="{{ url_for('movies.browse', genre=selected_genre, sort='release_date_desc', min_rating=min_rating, year_from=year_from, year_to=year_to, min_votes=min_votes, content_rating=content_rating_filter, hide_watched='true' if hide_watched else '') }}"
+                   class="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 {% if sort_by == 'release_date_desc' %}bg-slate-700 text-white{% endif %}">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span class="text-sm">Newest First</span>
+                </a>
+                <a href="{{ url_for('movies.browse', genre=selected_genre, sort='release_date_asc', min_rating=min_rating, year_from=year_from, year_to=year_to, min_votes=min_votes, content_rating=content_rating_filter, hide_watched='true' if hide_watched else '') }}"
+                   class="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 {% if sort_by == 'release_date_asc' %}bg-slate-700 text-white{% endif %}">
+                    <i data-lucide="calendar-clock" class="w-4 h-4"></i>
+                    <span class="text-sm">Oldest First</span>
+                </a>
+                <a href="{{ url_for('movies.browse', genre=selected_genre, sort='title', min_rating=min_rating, year_from=year_from, year_to=year_to, min_votes=min_votes, content_rating=content_rating_filter, hide_watched='true' if hide_watched else '') }}"
+                   class="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 {% if sort_by == 'title' %}bg-slate-700 text-white{% endif %}">
+                    <i data-lucide="sort-asc" class="w-4 h-4"></i>
+                    <span class="text-sm">Title (A-Z)</span>
+                </a>
+                <a href="{{ url_for('movies.browse', genre=selected_genre, sort='vote_count', min_rating=min_rating, year_from=year_from, year_to=year_to, min_votes=min_votes, content_rating=content_rating_filter, hide_watched='true' if hide_watched else '') }}"
+                   class="flex items-center space-x-2 px-4 py-2 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors duration-200 {% if sort_by == 'vote_count' %}bg-slate-700 text-white{% endif %}">
+                    <i data-lucide="users" class="w-4 h-4"></i>
+                    <span class="text-sm">Most Voted</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Filter Toggle Button (Mobile) -->
+        <button @click="filtersOpen = !filtersOpen"
+                class="flex items-center space-x-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 rounded-lg transition-colors duration-200 lg:hidden">
+            <i data-lucide="filter" class="w-4 h-4"></i>
+            <span class="text-sm font-medium">Filters</span>
+            {% if filters_active or selected_genre %}
+            <span class="w-2 h-2 bg-red-500 rounded-full"></span>
+            {% endif %}
+        </button>
+        
+        {% if selected_genre or sort_by != 'popularity' or filters_active %}
+        <a href="{{ url_for('movies.browse') }}" 
+           class="flex items-center space-x-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg transition-colors duration-200">
+            <i data-lucide="x-circle" class="w-4 h-4"></i>
+            <span class="text-sm font-medium">Clear All</span>
+        </a>
+        {% endif %}
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
+    <!-- Filter Sidebar -->
+    <div class="lg:col-span-1" x-show="filtersOpen" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 -translate-x-4" x-transition:enter-end="opacity-100 translate-x-0">
+        <!-- Filters Card -->
+        <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden mb-4">
+            <div class="bg-blue-900 border-b border-blue-700 px-4 py-3">
+                <h5 class="flex items-center space-x-2 text-white font-semibold">
+                    <i data-lucide="filter" class="w-5 h-5"></i>
+                    <span>Filters</span>
+                </h5>
+            </div>
+            <div class="p-4">
+                <form method="GET" action="{{ url_for('movies.browse') }}" class="space-y-4">
+                    <input type="hidden" name="sort" value="{{ sort_by }}">
+                    
+                    <!-- Minimum Rating -->
+                    <div>
+                        <label for="min_rating" class="flex items-center space-x-2 text-sm font-semibold text-slate-300 mb-2">
+                            <i data-lucide="star" class="w-4 h-4"></i>
+                            <span>Minimum Rating</span>
+                        </label>
+                        <select class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" 
+                                id="min_rating" name="min_rating">
+                            <option value="">Any Rating</option>
+                            <option value="9.0" {% if min_rating == 9.0 %}selected{% endif %}>9.0+</option>
+                            <option value="8.0" {% if min_rating == 8.0 %}selected{% endif %}>8.0+</option>
+                            <option value="7.0" {% if min_rating == 7.0 %}selected{% endif %}>7.0+</option>
+                            <option value="6.0" {% if min_rating == 6.0 %}selected{% endif %}>6.0+</option>
+                            <option value="5.0" {% if min_rating == 5.0 %}selected{% endif %}>5.0+</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Release Year Range -->
+                    <div>
+                        <label class="flex items-center space-x-2 text-sm font-semibold text-slate-300 mb-2">
+                            <i data-lucide="calendar-range" class="w-4 h-4"></i>
+                            <span>Release Year</span>
+                        </label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <input type="number" 
+                                   class="px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" 
+                                   name="year_from" placeholder="From" min="1900" max="2025" value="{{ year_from or '' }}">
+                            <input type="number" 
+                                   class="px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" 
+                                   name="year_to" placeholder="To" min="1900" max="2025" value="{{ year_to or '' }}">
+                        </div>
+                    </div>
+                    
+                    <!-- Minimum Vote Count -->
+                    <div>
+                        <label for="min_votes" class="flex items-center space-x-2 text-sm font-semibold text-slate-300 mb-2">
+                            <i data-lucide="users" class="w-4 h-4"></i>
+                            <span>Minimum Votes</span>
+                        </label>
+                        <select class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" 
+                                id="min_votes" name="min_votes">
+                            <option value="">Any</option>
+                            <option value="10000" {% if min_votes == 10000 %}selected{% endif %}>10,000+</option>
+                            <option value="5000" {% if min_votes == 5000 %}selected{% endif %}>5,000+</option>
+                            <option value="1000" {% if min_votes == 1000 %}selected{% endif %}>1,000+</option>
+                            <option value="500" {% if min_votes == 500 %}selected{% endif %}>500+</option>
+                        </select>
+                        <p class="text-xs text-slate-400 mt-1">Higher = more reliable ratings</p>
+                    </div>
+                    
+                    <!-- Content Rating -->
+                    <div>
+                        <label for="content_rating" class="flex items-center space-x-2 text-sm font-semibold text-slate-300 mb-2">
+                            <i data-lucide="shield-check" class="w-4 h-4"></i>
+                            <span>Content Rating</span>
+                        </label>
+                        <select class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200" 
+                                id="content_rating" name="content_rating">
+                            <option value="">Any Rating</option>
+                            {% for rating in content_ratings %}
+                            <option value="{{ rating }}" {% if content_rating_filter == rating %}selected{% endif %}>{{ rating }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    {% if current_user.is_authenticated %}
+                    <!-- Hide Watched Toggle -->
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <label for="hide_watched" class="flex items-center space-x-2 text-sm font-semibold text-slate-300">
+                                <i data-lucide="eye-off" class="w-4 h-4"></i>
+                                <span>Hide Watched</span>
+                            </label>
+                            <input type="checkbox" id="hide_watched" name="hide_watched" value="true" 
+                                   {% if hide_watched %}checked{% endif %}
+                                   class="w-11 h-6 bg-slate-700 border-2 border-slate-600 rounded-full relative appearance-none cursor-pointer transition-colors checked:bg-blue-600 checked:border-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800
+                                   before:content-[''] before:absolute before:w-4 before:h-4 before:rounded-full before:bg-white before:top-0.5 before:left-0.5 before:transition-transform checked:before:translate-x-5">
+                        </div>
+                        <p class="text-xs text-slate-400 mt-1">Only show unwatched movies</p>
+                    </div>
+                    {% endif %}
+                    
+                    <button type="submit" 
+                            class="w-full flex items-center justify-center space-x-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md hover:shadow-lg transition-all duration-200">
+                        <i data-lucide="search" class="w-4 h-4"></i>
+                        <span>Apply Filters</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Genre Filter Card -->
+        <div class="bg-slate-800 rounded-xl border border-slate-700 overflow-hidden">
+            <div class="bg-slate-700 border-b border-slate-600 px-4 py-3">
+                <h6 class="flex items-center space-x-2 text-white font-semibold text-sm">
+                    <i data-lucide="grid-3x3" class="w-4 h-4"></i>
+                    <span>Genres</span>
+                </h6>
+            </div>
+            <div class="p-4">
+                <div class="flex flex-wrap gap-2">
+                    {% for genre in genres %}
+                    <a href="{{ url_for('movies.browse', genre=genre, sort=sort_by, min_rating=min_rating, year_from=year_from, year_to=year_to, min_votes=min_votes, content_rating=content_rating_filter, hide_watched='true' if hide_watched else '') }}" 
+                       class="px-3 py-1 text-xs font-medium rounded-full transition-all duration-200 {% if genre == selected_genre %}bg-blue-600 text-white{% else %}bg-slate-700 text-slate-300 hover:bg-slate-600 hover:text-white{% endif %}">
+                        {{ genre }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Movies Grid -->
+    <div class="lg:col-span-3">
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 lg:gap-6">
+            {% for movie in movies.items %}
+                {{ movie_card(movie, is_authenticated=current_user.is_authenticated, show_watchlist_btn=True, watchlist_movie_ids=watchlist_movie_ids) }}
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        <nav aria-label="Movie pagination" class="mt-8">
+            <ul class="flex justify-center items-center space-x-2">
+                {% if movies.has_prev %}
+                <li>
+                    <a href="{{ url_for('movies.browse', page=movies.prev_num, genre=selected_genre, sort=sort_by, min_rating=min_rating, year_from=year_from, year_to=year_to, min_votes=min_votes, content_rating=content_rating_filter, hide_watched='true' if hide_watched else '') }}"
+                       class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 rounded-lg transition-colors duration-200">
+                        Previous
+                    </a>
+                </li>
+                {% else %}
+                <li>
+                    <span class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-500 rounded-lg cursor-not-allowed">
+                        Previous
+                    </span>
+                </li>
+                {% endif %}
+                
+                {% for page_num in movies.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                    {% if page_num %}
+                        {% if page_num == movies.page %}
+                        <li>
+                            <span class="px-4 py-2 bg-blue-600 border border-blue-500 text-white rounded-lg font-semibold">
+                                {{ page_num }}
+                            </span>
+                        </li>
+                        {% else %}
+                        <li>
+                            <a href="{{ url_for('movies.browse', page=page_num, genre=selected_genre, sort=sort_by, min_rating=min_rating, year_from=year_from, year_to=year_to, min_votes=min_votes, content_rating=content_rating_filter, hide_watched='true' if hide_watched else '') }}"
+                               class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 rounded-lg transition-colors duration-200">
+                                {{ page_num }}
+                            </a>
+                        </li>
+                        {% endif %}
+                    {% else %}
+                        <li>
+                            <span class="px-4 py-2 text-slate-500">...</span>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if movies.has_next %}
+                <li>
+                    <a href="{{ url_for('movies.browse', page=movies.next_num, genre=selected_genre, sort=sort_by, min_rating=min_rating, year_from=year_from, year_to=year_to, min_votes=min_votes, content_rating=content_rating_filter, hide_watched='true' if hide_watched else '') }}"
+                       class="px-4 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-200 rounded-lg transition-colors duration-200">
+                        Next
+                    </a>
+                </li>
+                {% else %}
+                <li>
+                    <span class="px-4 py-2 bg-slate-800 border border-slate-700 text-slate-500 rounded-lg cursor-not-allowed">
+                        Next
+                    </span>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+
+        <p class="text-center text-slate-400 mt-4">
+            Showing {{ movies.total }} movies
+            {% if filters_active or selected_genre %}
+            with filters applied
+            {% endif %}
+        </p>
+    </div>
+</div>
+
+<script>
+document.addEventListener('alpine:init', () => {
+    Alpine.data('browseFilters', () => ({
+        filtersOpen: window.innerWidth >= 1024
+    }))
+});
+</script>
+{% endblock %}

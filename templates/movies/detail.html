@@ -1,0 +1,477 @@
+{% extends "base.html" %}
+
+{% block content %}
+<!-- Backdrop Image -->
+{% if movie.get_backdrop_url() %}
+<div class="relative overflow-hidden rounded-xl mb-8">
+    <img src="{{ movie.get_backdrop_url('original') }}" 
+         alt="{{ movie.title }}" 
+         class="w-full h-auto brightness-50">
+    <div class="absolute bottom-6 left-6">
+        <h1 class="text-5xl md:text-6xl font-bold text-white drop-shadow-[2px_2px_8px_rgba(0,0,0,0.9)]">
+            {{ movie.title }}
+        </h1>
+    </div>
+</div>
+{% endif %}
+
+<div class="container mx-auto px-4 pb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Poster Column -->
+        <div class="lg:col-span-3">
+            {% if movie.get_poster_url() %}
+            <img src="{{ movie.get_poster_url('w500') }}" 
+                 class="w-full rounded-lg shadow-2xl" 
+                 alt="{{ movie.title }}">
+            {% else %}
+            <div class="w-full aspect-[2/3] bg-slate-700 rounded-lg flex items-center justify-center">
+                <i data-lucide="film" class="w-24 h-24 text-slate-500"></i>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Main Info Column -->
+        <div class="lg:col-span-6">
+            {% if not movie.get_backdrop_url() %}
+            <h1 class="text-4xl font-bold text-white mb-4">{{ movie.title }}</h1>
+            {% endif %}
+            
+            <!-- Movie Meta Info -->
+            <div class="flex flex-wrap items-center gap-3 mb-6">
+                {% if movie.content_rating %}
+                <span class="px-3 py-1 bg-slate-700 border-2 border-slate-500 text-slate-200 rounded text-sm font-bold">
+                    {{ movie.content_rating }}
+                </span>
+                {% endif %}
+                {% if movie.release_date %}
+                <span class="flex items-center gap-1 text-slate-300">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    {{ movie.release_date }}
+                </span>
+                {% endif %}
+                {% if movie.vote_average %}
+                <span class="flex items-center gap-1 text-amber-400">
+                    <i data-lucide="star" class="w-5 h-5 fill-current"></i>
+                    <span class="font-semibold">{{ "%.1f"|format(movie.vote_average) }}/10</span>
+                    <span class="text-slate-400 text-sm">({{ movie.vote_count }} votes)</span>
+                </span>
+                {% endif %}
+            </div>
+
+            <!-- Genres -->
+            <div class="flex flex-wrap gap-2 mb-6">
+                {% for genre in genres %}
+                <span class="px-3 py-1 bg-blue-900/50 border border-blue-700 text-blue-300 rounded-full text-sm hover:bg-blue-900/70 transition-colors">
+                    {{ genre }}
+                </span>
+                {% endfor %}
+            </div>
+
+            <!-- Overview -->
+            <div class="mb-6">
+                <h2 class="text-2xl font-semibold text-white mb-3">Overview</h2>
+                <p class="text-slate-300 leading-relaxed">{{ movie.overview or "No overview available." }}</p>
+            </div>
+
+            <!-- Cast -->
+            {% if cast %}
+            <div class="mb-6">
+                <h2 class="text-2xl font-semibold text-white mb-3">Cast</h2>
+                <ul class="space-y-2">
+                    {% for actor in cast %}
+                    <li class="text-slate-300">
+                        <span class="font-semibold text-white">{{ actor.person_name }}</span>
+                        {% if actor.character_name %}
+                        <span class="text-slate-400">as {{ actor.character_name }}</span>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            <!-- Director -->
+            {% if director %}
+            <div class="mb-6">
+                <h2 class="text-2xl font-semibold text-white mb-3">Director</h2>
+                <p class="text-slate-300">{{ director.person_name }}</p>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Actions Sidebar -->
+        <div class="lg:col-span-3 space-y-4">
+            <!-- Actions Card -->
+            <div class="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+                <div class="bg-blue-900 px-4 py-3 border-b border-slate-700">
+                    <h3 class="text-lg font-semibold text-white">Actions</h3>
+                </div>
+                <div class="p-4 space-y-3">
+                    {% if current_user.is_authenticated %}
+                        <!-- Watchlist Button -->
+                        <button type="button" 
+                                data-movie-id="{{ movie.id }}"
+                                data-action="{% if in_watchlist %}remove{% else %}add{% endif %}"
+                                class="detail-watchlist-btn w-full flex items-center justify-center gap-2 px-4 py-3 {% if in_watchlist %}bg-red-600 hover:bg-red-700{% else %}bg-slate-700 border border-red-600 hover:bg-red-600{% endif %} text-white rounded-lg transition-colors font-medium">
+                            <i data-lucide="{% if in_watchlist %}bookmark-minus{% else %}bookmark-plus{% endif %}" class="w-5 h-5"></i>
+                            <span>{% if in_watchlist %}Remove from Watchlist{% else %}Add to Watchlist{% endif %}</span>
+                        </button>
+
+                        <!-- Watch Button -->
+                        <button type="button" 
+                                data-movie-id="{{ movie.id }}"
+                                class="detail-watch-btn w-full flex items-center justify-center gap-2 px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors font-medium disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed"
+                                {% if has_watched %}disabled{% endif %}>
+                            <i data-lucide="check-circle" class="w-5 h-5"></i>
+                            <span>{% if has_watched %}Already Watched{% else %}Mark as Watched{% endif %}</span>
+                        </button>
+
+                        <!-- Rating Form -->
+                        <div class="rating-section">
+                            <div class="mb-2">
+                                <label class="block text-sm font-medium text-slate-300 mb-2" id="rating-label">
+                                    {% if user_rating %}
+                                    Your Rating: {{ user_rating }}/10
+                                    {% else %}
+                                    Rate this movie (0-10)
+                                    {% endif %}
+                                </label>
+                                <input type="number" 
+                                       id="rating-input"
+                                       min="0" 
+                                       max="10" 
+                                       step="1"
+                                       value="{{ user_rating or '' }}"
+                                       class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                       placeholder="Enter rating 0-10">
+                            </div>
+                            <button type="button" 
+                                    data-movie-id="{{ movie.id }}"
+                                    class="detail-rate-btn w-full px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                                Submit Rating
+                            </button>
+                        </div>
+
+                        <!-- Skip Button -->
+                        <button type="button" 
+                                data-movie-id="{{ movie.id }}"
+                                class="detail-skip-btn w-full flex items-center justify-center gap-2 px-4 py-3 bg-slate-700 text-slate-300 border border-slate-600 rounded-lg hover:bg-slate-600 transition-colors font-medium">
+                            <i data-lucide="x-circle" class="w-5 h-5"></i>
+                            <span>Not Interested</span>
+                        </button>
+                    {% else %}
+                        <p class="text-center text-slate-400 py-4">
+                            <a href="{{ url_for('auth.login') }}" class="text-blue-400 hover:text-blue-300 underline">Log in</a> to rate and track movies
+                        </p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Movie Stats Card -->
+            <div class="bg-slate-800 rounded-lg border border-slate-700 overflow-hidden">
+                <div class="bg-blue-900 px-4 py-3 border-b border-slate-700">
+                    <h3 class="text-lg font-semibold text-white">Stats</h3>
+                </div>
+                <div class="p-4 space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Popularity:</span>
+                        <span class="text-white font-medium">{{ "%.1f"|format(movie.popularity or 0) }}</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-400">Votes:</span>
+                        <span class="text-white font-medium">{{ movie.vote_count or 0 }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reviews Section -->
+<div class="container mx-auto px-4 mt-12">
+    <h2 class="text-3xl font-bold text-white mb-6 flex items-center gap-3">
+        <i data-lucide="message-square" class="w-8 h-8"></i>
+        Reviews
+        <span class="text-slate-400 text-2xl">({{ reviews.total }} review{{ 's' if reviews.total != 1 else '' }})</span>
+    </h2>
+
+    {% if current_user.is_authenticated %}
+        {% if user_review %}
+            <!-- User's existing review -->
+            <div class="bg-slate-800 rounded-lg border-2 border-blue-600 mb-6">
+                <div class="bg-blue-900 px-6 py-3 border-b border-blue-700">
+                    <h3 class="font-semibold text-white">Your Review</h3>
+                </div>
+                <div class="p-6">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-4 mb-4">
+                        <div>
+                            <span class="font-semibold text-white text-lg">{{ user_review.user.username }}</span>
+                            {% if user_review.rating %}
+                            <span class="inline-flex items-center gap-1 ml-3 px-3 py-1 bg-amber-500 text-slate-900 rounded-md text-sm font-semibold">
+                                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                                {{ user_review.rating }}/10
+                            </span>
+                            {% endif %}
+                        </div>
+                        <div class="flex gap-2">
+                            <a href="{{ url_for('movies.edit_review', review_id=user_review.id) }}" 
+                               class="inline-flex items-center gap-1 px-4 py-2 bg-slate-700 text-blue-400 border border-blue-600 rounded-lg hover:bg-slate-600 transition-colors text-sm font-medium">
+                                <i data-lucide="pencil" class="w-4 h-4"></i>
+                                Edit
+                            </a>
+                            <form method="POST" 
+                                  action="{{ url_for('movies.delete_review', review_id=user_review.id) }}" 
+                                  class="inline"
+                                  onsubmit="return confirm('Are you sure you want to delete your review?');">
+                                <button type="submit" 
+                                        class="inline-flex items-center gap-1 px-4 py-2 bg-slate-700 text-red-400 border border-red-600 rounded-lg hover:bg-slate-600 transition-colors text-sm font-medium">
+                                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                    <p class="text-slate-300 mb-4 leading-relaxed">{{ user_review.review_text }}</p>
+                    <div class="text-sm text-slate-400 mb-3">
+                        Posted {{ user_review.created_at.strftime('%B %d, %Y') }}
+                        {% if user_review.updated_at and user_review.updated_at != user_review.created_at %}
+                            • Edited {{ user_review.updated_at.strftime('%B %d, %Y') }}
+                        {% endif %}
+                    </div>
+                    <div class="flex gap-3">
+                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-900 text-emerald-300 rounded-md text-sm">
+                            <i data-lucide="thumbs-up" class="w-4 h-4"></i>
+                            {{ user_review.helpful_count }}
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-slate-700 text-slate-400 rounded-md text-sm">
+                            <i data-lucide="thumbs-down" class="w-4 h-4"></i>
+                            {{ user_review.not_helpful_count }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Add review form -->
+            <div class="bg-slate-800 rounded-lg border border-slate-700 mb-6">
+                <div class="bg-blue-900 px-6 py-3 border-b border-slate-700">
+                    <h3 class="font-semibold text-white">Write a Review</h3>
+                </div>
+                <div class="p-6">
+                    <form method="POST" action="{{ url_for('movies.add_review', movie_id=movie.id) }}" class="space-y-4">
+                        <!-- Optional Rating -->
+                        <div>
+                            <label for="rating" class="block text-sm font-medium text-slate-300 mb-2">
+                                Rating (Optional)
+                            </label>
+                            <select class="w-full px-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                    id="rating" 
+                                    name="rating">
+                                <option value="">No rating</option>
+                                {% for i in range(1, 11) %}
+                                    <option value="{{ i }}">{{ i }}/10{% if i >= 8 %} ⭐{% endif %}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <!-- Review Text -->
+                        <div>
+                            <label for="review_text" class="block text-sm font-medium text-slate-300 mb-2">
+                                Your Review <span class="text-red-400">*</span>
+                            </label>
+                            <textarea class="w-full px-4 py-3 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
+                                      id="review_text" 
+                                      name="review_text" 
+                                      rows="5" 
+                                      required 
+                                      minlength="10" 
+                                      placeholder="Share your thoughts about this movie... (minimum 10 characters)"></textarea>
+                        </div>
+
+                        <button type="submit" 
+                                class="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                            <i data-lucide="send" class="w-5 h-5"></i>
+                            Post Review
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="bg-blue-900/20 border border-blue-800 rounded-lg p-6 mb-6">
+            <p class="text-blue-300">
+                <a href="{{ url_for('auth.login') }}" class="text-blue-400 hover:text-blue-300 underline font-medium">Log in</a> to write a review.
+            </p>
+        </div>
+    {% endif %}
+
+    <!-- All Reviews -->
+    {% if reviews.items %}
+        <h3 class="text-2xl font-semibold text-white mb-4">All Reviews</h3>
+        <div class="space-y-4">
+            {% for review in reviews.items %}
+                {% if not (current_user.is_authenticated and review.user_id == current_user.id) %}
+                <div class="bg-slate-800 rounded-lg border border-slate-700 p-6">
+                    <div class="flex flex-col md:flex-row md:justify-between md:items-start gap-3 mb-3">
+                        <div>
+                            <span class="font-semibold text-white text-lg">{{ review.user.username }}</span>
+                            {% if review.rating %}
+                            <span class="inline-flex items-center gap-1 ml-3 px-2 py-1 bg-amber-500 text-slate-900 rounded text-sm font-semibold">
+                                <i data-lucide="star" class="w-4 h-4 fill-current"></i>
+                                {{ review.rating }}/10
+                            </span>
+                            {% endif %}
+                        </div>
+                        <span class="text-sm text-slate-400">
+                            {{ review.created_at.strftime('%B %d, %Y') }}
+                        </span>
+                    </div>
+                    <p class="text-slate-300 mb-4 leading-relaxed">{{ review.review_text }}</p>
+                    
+                    <!-- Voting buttons -->
+                    {% if current_user.is_authenticated %}
+                    <div class="flex flex-wrap items-center gap-3">
+                        <span class="text-sm text-slate-400">Was this helpful?</span>
+                        <form method="POST" 
+                              action="{{ url_for('movies.vote_review', review_id=review.id) }}" 
+                              class="inline">
+                            <input type="hidden" name="is_helpful" value="true">
+                            <button type="submit" 
+                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-700 text-emerald-400 border border-emerald-600 rounded-lg hover:bg-emerald-900/30 transition-colors text-sm">
+                                <i data-lucide="thumbs-up" class="w-4 h-4"></i>
+                                {{ review.helpful_count }}
+                            </button>
+                        </form>
+                        <form method="POST" 
+                              action="{{ url_for('movies.vote_review', review_id=review.id) }}" 
+                              class="inline">
+                            <input type="hidden" name="is_helpful" value="false">
+                            <button type="submit" 
+                                    class="inline-flex items-center gap-1 px-3 py-1.5 bg-slate-700 text-slate-400 border border-slate-600 rounded-lg hover:bg-slate-600 transition-colors text-sm">
+                                <i data-lucide="thumbs-down" class="w-4 h-4"></i>
+                                {{ review.not_helpful_count }}
+                            </button>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="flex gap-3">
+                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-emerald-900 text-emerald-300 rounded-md text-sm">
+                            <i data-lucide="thumbs-up" class="w-4 h-4"></i>
+                            {{ review.helpful_count }}
+                        </span>
+                        <span class="inline-flex items-center gap-1 px-3 py-1 bg-slate-700 text-slate-400 rounded-md text-sm">
+                            <i data-lucide="thumbs-down" class="w-4 h-4"></i>
+                            {{ review.not_helpful_count }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <!-- Review Pagination -->
+        {% if reviews.pages > 1 %}
+        <nav aria-label="Review pagination" class="flex justify-center mt-6">
+            <ul class="flex items-center gap-1">
+                <li>
+                    {% if reviews.has_prev %}
+                    <a href="{{ url_for('movies.detail', movie_id=movie.id, review_page=reviews.prev_num) }}" 
+                       class="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors border border-slate-700">
+                        Previous
+                    </a>
+                    {% else %}
+                    <span class="px-4 py-2 bg-slate-800/50 text-slate-600 rounded-lg border border-slate-700 cursor-not-allowed">
+                        Previous
+                    </span>
+                    {% endif %}
+                </li>
+
+                {% for page_num in reviews.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                    {% if page_num %}
+                    <li>
+                        <a href="{{ url_for('movies.detail', movie_id=movie.id, review_page=page_num) }}" 
+                           class="px-4 py-2 {% if page_num == reviews.page %}bg-blue-600 text-white{% else %}bg-slate-800 text-slate-300 hover:bg-slate-700{% endif %} rounded-lg transition-colors border border-slate-700">
+                            {{ page_num }}
+                        </a>
+                    </li>
+                    {% else %}
+                    <li>
+                        <span class="px-3 py-2 text-slate-600">...</span>
+                    </li>
+                    {% endif %}
+                {% endfor %}
+
+                <li>
+                    {% if reviews.has_next %}
+                    <a href="{{ url_for('movies.detail', movie_id=movie.id, review_page=reviews.next_num) }}" 
+                       class="px-4 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition-colors border border-slate-700">
+                        Next
+                    </a>
+                    {% else %}
+                    <span class="px-4 py-2 bg-slate-800/50 text-slate-600 rounded-lg border border-slate-700 cursor-not-allowed">
+                        Next
+                    </span>
+                    {% endif %}
+                </li>
+            </ul>
+        </nav>
+        {% endif %}
+    {% elif not current_user.is_authenticated or not user_review %}
+        <p class="text-slate-400">No reviews yet. Be the first to review this movie!</p>
+    {% endif %}
+</div>
+
+<!-- More Like This Section -->
+{% if similar_movies %}
+<div class="container mx-auto px-4 mt-12">
+    <h2 class="text-3xl font-bold text-white mb-6 flex items-center gap-3">
+        <i data-lucide="film" class="w-8 h-8"></i>
+        More Like This
+    </h2>
+    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        {% for item in similar_movies %}
+        <div class="bg-slate-800 rounded-lg overflow-hidden shadow-lg hover:shadow-2xl transition-shadow duration-300 group">
+            <a href="{{ url_for('movies.detail', movie_id=item.movie.id) }}" class="block">
+                <div class="relative overflow-hidden">
+                    {% if item.movie.get_poster_url('w342') %}
+                    <img src="{{ item.movie.get_poster_url('w342') }}" 
+                         class="w-full h-auto aspect-[2/3] object-cover group-hover:scale-105 transition-transform duration-300" 
+                         alt="{{ item.movie.title }}" 
+                         loading="lazy">
+                    {% else %}
+                    <div class="w-full aspect-[2/3] bg-slate-700 flex items-center justify-center">
+                        <i data-lucide="film" class="w-12 h-12 text-slate-500"></i>
+                    </div>
+                    {% endif %}
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/0 to-black/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                </div>
+                <div class="p-3">
+                    <h3 class="text-white font-medium text-sm mb-2 line-clamp-2 group-hover:text-blue-400 transition-colors">
+                        {{ item.movie.title }}
+                    </h3>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="flex items-center gap-1 text-amber-400">
+                            <i data-lucide="star" class="w-3 h-3 fill-current"></i>
+                            {{ "%.1f"|format(item.movie.vote_average or 0) }}
+                        </span>
+                        <span class="text-slate-400">
+                            {{ "%.0f"|format(item.similarity * 100) }}% match
+                        </span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Back Button -->
+<div class="container mx-auto px-4 mt-8 mb-8">
+    <a href="{{ url_for('movies.browse') }}" 
+       class="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 text-slate-300 rounded-lg hover:bg-slate-700 transition-colors border border-slate-700">
+        <i data-lucide="arrow-left" class="w-4 h-4"></i>
+        Back to Browse
+    </a>
+</div>
+{% endblock %}

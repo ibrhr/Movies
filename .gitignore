@@ -12,6 +12,7 @@ build/
 
 # Environment
 .env
+.env.production
 .env.local
 
 # Data
@@ -21,6 +22,11 @@ data/*.json
 data/tmdb_raw/
 *.sqlite3
 
+# Backups
+backups/
+*.sql
+*.sql.gz
+
 # IDE
 .vscode/
 .idea/
@@ -29,7 +35,6 @@ data/tmdb_raw/
 
 # Jupyter
 .ipynb_checkpoints/
-*.ipynb
 
 # OS
 .DS_Store
@@ -43,5 +48,3 @@ logs/
 .cache/
 .pytest_cache/
 .mypy_cache/
-
-*.md

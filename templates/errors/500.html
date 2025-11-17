@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-16">
+    <div class="max-w-md mx-auto text-center">
+        <!-- Error Icon -->
+        <div class="mb-8">
+            <i data-lucide="alert-triangle" class="w-24 h-24 text-red-400 mx-auto"></i>
+        </div>
+        
+        <!-- Error Title -->
+        <h1 class="text-4xl font-bold text-white mb-4">Server Error</h1>
+        
+        <!-- Error Message -->
+        <p class="text-xl text-slate-300 mb-8">
+            Something went wrong on our end. We're working to fix it.
+        </p>
+        
+        <!-- Action Buttons -->
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="{{ url_for('main.index') }}" 
+               class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                <i data-lucide="home" class="w-4 h-4 inline mr-2"></i>
+                Go Home
+            </a>
+            <button onclick="window.location.reload()" 
+                    class="px-6 py-3 bg-slate-700 text-slate-300 rounded-lg hover:bg-slate-600 transition-colors font-medium">
+                <i data-lucide="refresh-ccw" class="w-4 h-4 inline mr-2"></i>
+                Try Again
+            </button>
+        </div>
+        
+        <!-- Error Details (only in development) -->
+        {% if config.DEBUG %}
+        <div class="mt-8 p-4 bg-slate-800/50 rounded-lg text-left">
+            <h3 class="text-white font-semibold mb-2">Debug Information</h3>
+            <p class="text-slate-400 text-sm">
+                This error has been logged. Check the server logs for more details.
+            </p>
+        </div>
+        {% endif %}
+        
+        <!-- Contact Info -->
+        <div class="mt-8 p-4 bg-slate-800/50 rounded-lg">
+            <p class="text-slate-400 text-sm">
+                If this problem persists, please contact support with details about what you were doing.
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}
