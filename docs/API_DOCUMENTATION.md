@@ -163,18 +163,31 @@ Authorization: Bearer <your_jwt_token>
 
 ---
 
-### Semantic Search
+### Mark as Watched
 
-**Endpoint:** `POST /api/v1/movies/search/semantic` 🔐
+**Endpoint:** `POST /api/v1/interactions/watch/<movie_id>` 🔐
+
+**Example:** `POST /api/v1/interactions/watch/550`
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Added \"Fight Club\" to your watch history!",
+  "already_watched": false
+}
+```
+
+---
+
+### Rate Movie
+
+**Endpoint:** `POST /api/v1/interactions/rate/<movie_id>` 🔐
 
 **Request Body:**
 ```json
 {
-  "query": "movies about artificial intelligence and robots",
-  "limit": 20,
-  "content_rating": "PG-13",
-  "year_min": 2000,
-  "year_max": 2024
+  "rating": 9
 }
 ```
 
@@ -182,69 +195,30 @@ Authorization: Bearer <your_jwt_token>
 ```json
 {
   "success": true,
-  "results": [
-    {
-      "id": 27205,
-      "title": "Inception",
-      "overview": "Cobb, a skilled thief...",
-      "release_date": "2010-07-15",
-      "poster_path": "/9gk7adHYeDvHkCSEqAvQNLV5Uge.jpg",
-      "vote_average": 8.4,
-      "runtime": 148,
-      "content_rating": "PG-13",
-      "genres": ["Action", "Science Fiction", "Adventure"],
-      "similarity_score": 0.89
-    }
-  ]
+  "message": "Rated \"Fight Club\" 9/10",
+  "is_update": false
 }
 ```
 
+**Note:** Rating must be an integer between 0-10. Automatically marks movie as watched.
+
 ---
 
-## 🎯 Recommendation Endpoints
+### Skip Movie (Not Interested)
 
-### Get Personalized Recommendations
+**Endpoint:** `POST /api/v1/interactions/skip/<movie_id>` 🔐
 
-**Endpoint:** `GET /api/v1/recommendations` 🔐
+**Example:** `POST /api/v1/interactions/skip/550`
 
-**Query Parameters:**
-- `limit` (int, default: 20, max: 50) - Number of recommendations
-- `exclude_watched` (bool, default: true) - Exclude watched movies
-
-**Example:** `GET /api/v1/recommendations?limit=10&exclude_watched=true`
-
-**Response (200):**
+**Response (201):**
 ```json
 {
   "success": true,
-  "recommendations": [
-    {
-      "id": 680,
-      "title": "Pulp Fiction",
-      "overview": "A burger-loving hit man...",
-      "release_date": "1994-09-10",
-      "poster_path": "/d5iIlFn5s0ImszYzBPb8JPIfbXD.jpg",
-      "vote_average": 8.5,
-      "runtime": 154,
-      "content_rating": "R",
-      "genres": ["Thriller", "Crime"],
-      "recommendation_score": 0.92,
-      "explanation": {
-        "interest_score": 0.88,
-        "discovery_score": 0.15,
-        "collaborative_score": 0.67,
-        "category_score": 0.75
-      }
-    }
-  ]
+  "message": "Marked \"Fight Club\" as not interested."
 }
 ```
 
-**Note:** Requires user interaction history (ratings/watches).
-
 ---
-
-## 📋 Watchlist Endpoints
 
 ### Get Watchlist
 
@@ -292,7 +266,7 @@ Authorization: Bearer <your_jwt_token>
 ```json
 {
   "success": true,
-  "message": "Added \"Fight Club\" to watchlist"
+  "message": "Added \"Fight Club\" to your watchlist!"
 }
 ```
 
@@ -308,15 +282,13 @@ Authorization: Bearer <your_jwt_token>
 ```json
 {
   "success": true,
-  "message": "Removed \"Fight Club\" from watchlist"
+  "message": "Removed \"Fight Club\" from your watchlist."
 }
 ```
 
 ---
 
-## 🎥 Watch History Endpoints
-
-### Get Watch History
+### Get Watched Movies
 
 **Endpoint:** `GET /api/v1/watched` 🔐
 
@@ -353,65 +325,6 @@ Authorization: Bearer <your_jwt_token>
 ```
 
 ---
-
-## 👤 User Interaction Endpoints
-
-### Mark as Watched
-
-**Endpoint:** `POST /api/v1/interactions/watch/<movie_id>` 🔐
-
-**Example:** `POST /api/v1/interactions/watch/550`
-
-**Response (201):**
-```json
-{
-  "success": true,
-  "message": "Marked \"Fight Club\" as watched"
-}
-```
-
----
-
-### Rate Movie
-
-**Endpoint:** `POST /api/v1/interactions/rate/<movie_id>` 🔐
-
-**Request Body:**
-```json
-{
-  "rating": 9
-}
-```
-
-**Response (200):**
-```json
-{
-  "success": true,
-  "message": "Rated \"Fight Club\" 9/10"
-}
-```
-
-**Note:** Rating must be an integer between 0-10. Automatically marks movie as watched.
-
----
-
-### Skip Movie (Not Interested)
-
-**Endpoint:** `POST /api/v1/interactions/skip/<movie_id>` 🔐
-
-**Example:** `POST /api/v1/interactions/skip/550`
-
-**Response (201):**
-```json
-{
-  "success": true,
-  "message": "Marked \"Fight Club\" as not interested"
-}
-```
-
----
-
-## 👤 User Profile Endpoints
 
 ### Get User Profile
 
