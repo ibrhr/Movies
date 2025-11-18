@@ -2,7 +2,7 @@
 
 Complete REST API documentation for mobile app integration.
 
-**Base URL:** `http://localhost:5000/api/v1`
+**Base URL:** `https://movies.ibrhr.dev/api/v1`
 
 ---
 
@@ -163,11 +163,61 @@ Authorization: Bearer <your_jwt_token>
 
 ---
 
+### Smart Search
+
+**Endpoint:** `GET /smart-search`
+
+**Query Parameters:**
+- `q` (string, required) - Search query (minimum 3 characters).
+- `page` (int, default: 1) - Page number.
+- `per_page` (int, default: 20) - Number of results per page.
+- `rating` (string, optional) - Filter by content rating.
+- `year_from` (int, optional) - Minimum release year.
+- `year_to` (int, optional) - Maximum release year.
+
+**Example:** `GET https://movies.ibrhr.dev/smart-search?q=artificial+intelligence&page=1&per_page=10&rating=PG-13&year_from=2000&year_to=2025`
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "movies": [
+    {
+      "id": 123,
+      "title": "AI: Artificial Intelligence",
+      "overview": "A story about a robot boy...",
+      "release_date": "2001-06-29",
+      "poster_path": "/path/to/poster.jpg",
+      "vote_average": 7.8,
+      "similarity_score": 0.95,
+      "genres": ["Science Fiction", "Drama"]
+    }
+  ],
+  "pagination": {
+    "page": 1,
+    "per_page": 10,
+    "total_results": 100,
+    "total_pages": 10
+  },
+  "filters": {
+    "available_ratings": ["G", "PG", "PG-13", "R"],
+    "year_from": 2000,
+    "year_to": 2025
+  }
+}
+```
+
+**Error Responses:**
+- **400 Bad Request:** Query is too short or invalid parameters.
+- **500 Internal Server Error:** An error occurred during processing.
+
+---
+
 ### Mark as Watched
 
 **Endpoint:** `POST /api/v1/interactions/watch/<movie_id>` 🔐
 
-**Example:** `POST /api/v1/interactions/watch/550`
+**Example:** `POST https://movies.ibrhr.dev/api/v1/interactions/watch/550`
 
 **Response (201):**
 ```json
@@ -208,7 +258,7 @@ Authorization: Bearer <your_jwt_token>
 
 **Endpoint:** `POST /api/v1/interactions/skip/<movie_id>` 🔐
 
-**Example:** `POST /api/v1/interactions/skip/550`
+**Example:** `POST https://movies.ibrhr.dev/api/v1/interactions/skip/550`
 
 **Response (201):**
 ```json
@@ -260,7 +310,7 @@ Authorization: Bearer <your_jwt_token>
 
 **Endpoint:** `POST /api/v1/watchlist/<movie_id>` 🔐
 
-**Example:** `POST /api/v1/watchlist/550`
+**Example:** `POST https://movies.ibrhr.dev/api/v1/watchlist/550`
 
 **Response (201):**
 ```json
@@ -276,7 +326,7 @@ Authorization: Bearer <your_jwt_token>
 
 **Endpoint:** `DELETE /api/v1/watchlist/<movie_id>` 🔐
 
-**Example:** `DELETE /api/v1/watchlist/550`
+**Example:** `DELETE https://movies.ibrhr.dev/api/v1/watchlist/550`
 
 **Response (200):**
 ```json
@@ -394,20 +444,20 @@ All endpoints return consistent error responses:
 
 **Login:**
 ```bash
-curl -X POST http://localhost:5000/api/v1/auth/login \
+curl -X POST https://movies.ibrhr.dev/api/v1/auth/login \
   -H "Content-Type: application/json" \
   -d '{"email":"user@example.com","password":"password123"}'
 ```
 
 **Get Movies (with token):**
 ```bash
-curl -X GET http://localhost:5000/api/v1/movies?page=1&per_page=10 \
+curl -X GET https://movies.ibrhr.dev/api/v1/movies?page=1&per_page=10 \
   -H "Authorization: Bearer <your_jwt_token>"
 ```
 
 **Rate a Movie:**
 ```bash
-curl -X POST http://localhost:5000/api/v1/interactions/rate/550 \
+curl -X POST https://movies.ibrhr.dev/api/v1/interactions/rate/550 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer <your_jwt_token>" \
   -d '{"rating":9}'
@@ -418,7 +468,7 @@ curl -X POST http://localhost:5000/api/v1/interactions/rate/550 \
 ```python
 import requests
 
-BASE_URL = "http://localhost:5000/api/v1"
+BASE_URL = "https://movies.ibrhr.dev/api/v1"
 
 # Login
 response = requests.post(f"{BASE_URL}/auth/login", json={
@@ -451,7 +501,7 @@ print(recommendations.json())
 
 ## 📖 Additional Resources
 
-- **Web UI:** `http://localhost:5000` (Flask templates)
-- **API Base:** `http://localhost:5000/api/v1` (JSON responses)
+- **Web UI:** `https://movies.ibrhr.dev` (Flask templates)
+- **API Base:** `https://movies.ibrhr.dev/api/v1` (JSON responses)
 - **Database:** SQLite at `data/movies.db`
 - **Embeddings:** NumPy array at `data/embeddings.npy`
